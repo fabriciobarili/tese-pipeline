@@ -1,0 +1,65 @@
+# Ingestão meteorológica para a Região Metropolitana de Porto Alegre (RM POA).
+# Fonte: Open-Meteo Historical Weather API (ERA5) — https://open-meteo.com/
+# Período: 2025 completo (alinhado com ANAC VRA 2025).
+#
+# 10 pontos estratégicos cobrindo os principais municípios da RM POA (IBGE 2022).
+# Escolhidos para representar variação espacial de temperatura, umidade e vento
+# relevante para o cálculo de índices de conforto térmico (pythermalcomfort).
+#
+# Variáveis adicionais em relação ao config meteo.yaml (estação SBPA):
+#   shortwave_radiation — radiação solar global (W/m²), necessária para estimar
+#   a temperatura radiante média (Tmrt) usada no cálculo do UTCI.
+
+locations:
+  - name: POA_CENTRO           # Porto Alegre — área central
+    latitude: -30.0346
+    longitude: -51.2177
+
+  - name: SBPA                 # Porto Alegre — Aeroporto Salgado Filho
+    latitude: -29.9944
+    longitude: -51.1713
+
+  - name: CANOAS               # Canoas — maior município industrial da RM
+    latitude: -29.9178
+    longitude: -51.1836
+
+  - name: NOVO_HAMBURGO        # Novo Hamburgo — extremo norte da RM
+    latitude: -29.6783
+    longitude: -51.1303
+
+  - name: SAO_LEOPOLDO         # São Leopoldo — polo tecnológico
+    latitude: -29.7668
+    longitude: -51.1493
+
+  - name: GRAVATAI             # Gravataí — leste, microclima distinto
+    latitude: -29.9411
+    longitude: -50.9919
+
+  - name: ALVORADA             # Alvorada — limítrofe leste de Porto Alegre
+    latitude: -29.9888
+    longitude: -51.0823
+
+  - name: VIAM_AO              # Viamão — sul/leste, colinas e mata
+    latitude: -30.0818
+    longitude: -51.0232
+
+  - name: ESTEIO               # Esteio — centro da RM, corredor norte-sul
+    latitude: -29.8496
+    longitude: -51.1760
+
+  - name: GUAIBA               # Guaíba — sul, margem do Lago Guaíba
+    latitude: -30.1123
+    longitude: -51.3238
+
+start_date: "2025-01-01"
+end_date: "2025-12-31"
+timezone: "America/Sao_Paulo"
+
+hourly:
+  - temperature_2m           # tdb  — temperatura do ar (°C)
+  - relative_humidity_2m     # rh   — umidade relativa (%)
+  - wind_speed_10m           # v    — velocidade do vento a 10m (km/h → m/s na normaliz.)
+  - weather_code             # código WMO (chuva, trovoada, névoa etc.)
+  - precipitation            # pp   — precipitação acumulada por hora (mm)
+  - shortwave_radiation      # srad — radiação solar global (W/m²); necessária para Tmrt/UTCI
+  - apparent_temperature     # at_om— temperatura aparente Open-Meteo (referência/validação)

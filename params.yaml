@@ -15,8 +15,8 @@ meteo:
   # período, locais e timezone em config/meteo.yaml
 
 flights:
-  provider: opensky
-  # aeroportos, janela e filtros em config/flights.yaml
+  provider: anac_vra
+  # aeroporto, URLs e filtros em config/flights.yaml
 
 synthesis:
   # parâmetros do processo gerador em config/synthesis.yaml

@@ -12,23 +12,45 @@ stages:
     outs:
       - data/raw/meteo.parquet
 
-  ingest_flights:
-    cmd: python -m tese_pipeline.ingestion.flights_opensky
+  ingest_meteo_rm:
+    cmd: python -m tese_pipeline.ingestion.meteo_rm
     deps:
-      - src/tese_pipeline/ingestion/flights_opensky.py
+      - src/tese_pipeline/ingestion/meteo_rm.py
+      - config/meteo_rm.yaml
+    params:
+      - seed
+    outs:
+      - data/raw/meteo_rm.parquet
+
+  thermal_comfort:
+    cmd: python -m tese_pipeline.processing.thermal_comfort
+    deps:
+      - src/tese_pipeline/processing/thermal_comfort.py
+      - data/raw/meteo_rm.parquet
+      - config/meteo_rm.yaml
+    params:
+      - seed
+      - geospatial
+    outs:
+      - data/processed/thermal_comfort.parquet
+
+  ingest_anac:
+    cmd: python -m tese_pipeline.ingestion.flights_anac
+    deps:
+      - src/tese_pipeline/ingestion/flights_anac.py
       - config/flights.yaml
     params:
       - seed
       - flights
     outs:
-      - data/raw/flights.parquet
+      - data/raw/flights_anac.parquet
 
   process:
     cmd: python -m tese_pipeline.processing.features
     deps:
       - src/tese_pipeline/processing/
       - data/raw/meteo.parquet
-      - data/raw/flights.parquet
+      - data/raw/flights_anac.parquet
     params:
       - seed
     outs:
@@ -83,3 +105,17 @@ stages:
       - explain
     outs:
       - reports/shap/
+
+  delay_analysis:
+    cmd: python -m tese_pipeline.modeling.delay_classifier
+    deps:
+      - src/tese_pipeline/modeling/delay_classifier.py
+      - data/raw/flights_anac.parquet
+      - data/raw/meteo.parquet
+    params:
+      - seed
+    outs:
+      - reports/delay_analysis/
+    metrics:
+      - reports/delay_analysis/classifier_metrics.json:
+          cache: false

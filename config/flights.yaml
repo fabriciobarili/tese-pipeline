@@ -1,21 +1,28 @@
-# Ingestão de voos (OpenSky Network). ICAO dos aeroportos.
-# Autenticação via OAuth2 client credentials (env: OPENSKY_CLIENT_ID / OPENSKY_CLIENT_SECRET).
-airports:
-  - SBGR               # GRU
-  - SBSP               # CGH
-start_date: "2024-01-01"
-end_date: "2024-12-31"
-kinds:
-  - arrival
-  - departure
-chunk_days: 7          # janela por chamada (respeita limites da API)
+# Ingestão de voos — ANAC VRA (Voo Regular Ativo) 2025.
+# Fonte: https://www.gov.br/anac/pt-br/acesso-a-informacao/dados-abertos/
+#          areas-de-atuacao/voos-e-operacoes-aereas/voo-regular-ativo-vra
+# Acesso: 2026-10-10
 
-# Coordenadas dos ICAOs — usadas para indexação H3 (h3.latlng_to_cell)
-# Fonte: ourairports.com / ICAO AIGD
+anac:
+  airport_filter: "SBPA"       # filtra chegadas no Aeroporto Salgado Filho (POA)
+  keep_status:
+    - "REALIZADO"               # exclui cancelamentos; manter somente voos completados
+  urls:
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/01%20-%20Janeiro/VRA_20251.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/02%20-%20Fevereiro/VRA_20252.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/03%20-%20Mar%C3%A7o/VRA_20253.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/04%20-%20Abril/VRA_20254.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/05%20-%20Maio/VRA_20255.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/06%20-%20Junho/VRA_20256.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/07%20-%20Julho/VRA_20257.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/08%20-%20Agosto/VRA_20258.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/09%20-%20Setembro/VRA_20259.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/10%20-%20Outubro/VRA_202510.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/11%20-%20Novembro/VRA_202511.csv"
+    - "https://sistemas.anac.gov.br/dadosabertos/Voos%20e%20opera%C3%A7%C3%B5es%20a%C3%A9reas/Voo%20Regular%20Ativo%20%28VRA%29/2025/12%20-%20Dezembro/VRA_202512.csv"
+
+# Coordenadas do SBPA — usadas para indexação H3 no estágio de processamento
 icao_coords:
-  SBGR:               # Guarulhos (GRU)
-    latitude: -23.4356
-    longitude: -46.4731
-  SBSP:               # Congonhas (CGH)
-    latitude: -23.6273
-    longitude: -46.6566
+  SBPA:
+    latitude: -29.9944
+    longitude: -51.1713

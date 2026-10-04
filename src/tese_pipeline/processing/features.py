@@ -37,22 +37,43 @@ def add_h3_features(df: pd.DataFrame, icao_coords: dict, res: int, macro_res: in
 
 def build(meteo: pd.DataFrame, flights: pd.DataFrame, icao_coords: dict,
           h3_res: int, h3_macro: int) -> pd.DataFrame:
-    """Une meteorologia e voos por (aeroporto, hora UTC) e deriva features.
+    """Une meteorologia e voos por (aeroporto, hora local) e deriva features.
 
     Regra anti-leakage: usar apenas informação disponível no instante do evento.
+
+    Schema esperado de flights (ANAC VRA normalizado):
+      actual_arr      — datetime UTC da chegada real (tz-naive, UTC implícito)
+      arr_hour_local  — hora local arredondada para baixo (gerado em flights_anac.py)
+      dest_icao       — ICAO do aeródromo de destino (filtrado para SBPA)
+      delay_arr_min   — atraso de chegada em minutos
+      is_delayed      — bool: delay_arr_min > 15
+      route_type      — N/I/C
+      airline_icao    — companhia aérea
     """
     meteo = meteo.copy()
     flights = flights.copy()
 
-    meteo["ts_hour"] = pd.to_datetime(meteo["time"], utc=True).dt.floor("h")
-    flights["ts_hour"] = pd.to_datetime(flights["firstSeen"], unit="s", utc=True).dt.floor("h")
+    # meteorologia: índice por (aeroporto, hora local)
+    meteo["ts_hour"] = pd.to_datetime(meteo["time"]).dt.tz_localize("UTC").dt.tz_convert("America/Sao_Paulo").dt.floor("h")
+
+    # voos ANAC: arr_hour_local já foi gerado pelo módulo de ingestão
+    if "arr_hour_local" in flights.columns:
+        flights["ts_hour"] = pd.to_datetime(flights["arr_hour_local"])
+    else:
+        flights["ts_hour"] = pd.to_datetime(flights["actual_arr"], utc=True).dt.tz_convert("America/Sao_Paulo").dt.floor("h")
+
+    # para join, airport = dest_icao
+    if "dest_icao" in flights.columns:
+        flights["_airport"] = flights["dest_icao"].str.upper()
+    elif "_airport" not in flights.columns:
+        flights["_airport"] = "SBPA"
 
     df = flights.merge(
         meteo,
         left_on=["_airport", "ts_hour"],
         right_on=["location", "ts_hour"],
         how="left",
-        validate="m:1",  # flagra explosão de linhas no join
+        validate="m:1",
     )
 
     sem_match = df["location"].isna().mean() * 100
@@ -63,6 +84,11 @@ def build(meteo: pd.DataFrame, flights: pd.DataFrame, icao_coords: dict,
     df["dow"] = df["ts_hour"].dt.dayofweek
     df["month"] = df["ts_hour"].dt.month
     df["is_rain"] = (df["precipitation"].fillna(0) > 0).astype(int)
+
+    # features de atraso (ANAC VRA)
+    for col in ("delay_arr_min", "delay_dep_min", "is_delayed", "route_type", "airline_icao"):
+        if col not in df.columns:
+            df[col] = None
 
     # features geoespaciais H3
     df = add_h3_features(df, icao_coords, h3_res, h3_macro)
@@ -77,7 +103,7 @@ def main() -> None:
     flights_cfg = load_config("config/flights.yaml")
 
     meteo = pd.read_parquet("data/raw/meteo.parquet")
-    flights = pd.read_parquet("data/raw/flights.parquet")
+    flights = pd.read_parquet("data/raw/flights_anac.parquet")
     df = build(
         meteo, flights,
         icao_coords=flights_cfg["icao_coords"],
