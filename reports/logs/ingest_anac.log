@@ -28,3 +28,33 @@
 2026-10-04 18:06:49,905 | INFO    | __main__ | missing actual_arr: 0.00%
 2026-10-04 18:06:49,905 | INFO    | __main__ | missing delay_arr_min: 3.88%
 2026-10-04 18:06:50,851 | INFO    | __main__ | ANAC VRA salvo: 27959 chegadas | 12 meses | colunas: ['airline_icao', 'flight_number', 'auth_code', 'route_type', 'origin_icao', 'dest_icao', 'scheduled_dep', 'actual_dep', 'scheduled_arr', 'actual_arr', 'flight_status', 'delay_code', 'delay_arr_min', 'delay_dep_min', 'is_delayed', 'arr_hour_local', 'source_file', 'source_month']
+2026-10-04 18:25:28,913 | INFO    | __main__ | já existe localmente: VRA_20251.csv (pulando download)
+2026-10-04 18:25:29,406 | INFO    | __main__ | VRA_20251.csv → 1943 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:29,907 | INFO    | __main__ | já existe localmente: VRA_20252.csv (pulando download)
+2026-10-04 18:25:30,260 | INFO    | __main__ | VRA_20252.csv → 1890 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:30,760 | INFO    | __main__ | já existe localmente: VRA_20253.csv (pulando download)
+2026-10-04 18:25:31,239 | INFO    | __main__ | VRA_20253.csv → 2115 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:31,739 | INFO    | __main__ | já existe localmente: VRA_20254.csv (pulando download)
+2026-10-04 18:25:32,297 | INFO    | __main__ | VRA_20254.csv → 2229 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:32,798 | INFO    | __main__ | já existe localmente: VRA_20255.csv (pulando download)
+2026-10-04 18:25:33,372 | INFO    | __main__ | VRA_20255.csv → 2361 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:33,873 | INFO    | __main__ | já existe localmente: VRA_20256.csv (pulando download)
+2026-10-04 18:25:34,430 | INFO    | __main__ | VRA_20256.csv → 2281 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:34,931 | INFO    | __main__ | já existe localmente: VRA_20257.csv (pulando download)
+2026-10-04 18:25:35,472 | INFO    | __main__ | VRA_20257.csv → 2391 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:35,974 | INFO    | __main__ | já existe localmente: VRA_20258.csv (pulando download)
+2026-10-04 18:25:36,508 | INFO    | __main__ | VRA_20258.csv → 2455 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:37,010 | INFO    | __main__ | já existe localmente: VRA_20259.csv (pulando download)
+2026-10-04 18:25:37,569 | INFO    | __main__ | VRA_20259.csv → 2577 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:38,070 | INFO    | __main__ | já existe localmente: VRA_202510.csv (pulando download)
+2026-10-04 18:25:38,642 | INFO    | __main__ | VRA_202510.csv → 2690 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:39,143 | INFO    | __main__ | já existe localmente: VRA_202511.csv (pulando download)
+2026-10-04 18:25:39,726 | INFO    | __main__ | VRA_202511.csv → 2539 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:40,227 | INFO    | __main__ | já existe localmente: VRA_202512.csv (pulando download)
+2026-10-04 18:25:40,884 | INFO    | __main__ | VRA_202512.csv → 2488 chegadas SBPA (['REALIZADO'])
+2026-10-04 18:25:41,434 | INFO    | __main__ | missing scheduled_dep: 3.88%
+2026-10-04 18:25:41,434 | INFO    | __main__ | missing actual_dep: 0.00%
+2026-10-04 18:25:41,435 | INFO    | __main__ | missing scheduled_arr: 3.88%
+2026-10-04 18:25:41,438 | INFO    | __main__ | missing actual_arr: 0.00%
+2026-10-04 18:25:41,439 | INFO    | __main__ | missing delay_arr_min: 3.88%
+2026-10-04 18:25:41,772 | INFO    | __main__ | ANAC VRA salvo: 27959 chegadas | 12 meses | colunas: ['airline_icao', 'flight_number', 'auth_code', 'route_type', 'origin_icao', 'dest_icao', 'scheduled_dep', 'actual_dep', 'scheduled_arr', 'actual_arr', 'flight_status', 'delay_code', 'delay_arr_min', 'delay_dep_min', 'is_delayed', 'arr_hour_local', 'source_file', 'source_month']

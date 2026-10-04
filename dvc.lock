@@ -104,3 +104,140 @@ stages:
       hash: md5
       md5: d44f210806a782a1e2bb569689c7d076
       size: 6629
+  ingest_anac:
+    cmd: python -m tese_pipeline.ingestion.flights_anac
+    deps:
+    - path: config/flights.yaml
+      hash: md5
+      md5: ddf06241853af5420694b15ddd6b727e
+      size: 2560
+    - path: src/tese_pipeline/ingestion/flights_anac.py
+      hash: md5
+      md5: 248cdd0cf2071c388f3cdb3c62d79415
+      size: 8901
+    params:
+      params.yaml:
+        flights:
+          provider: anac_vra
+        seed: 42
+    outs:
+    - path: data/raw/flights_anac.parquet
+      hash: md5
+      md5: b97ebbe0bb210bb9d7825a91774d10c7
+      size: 1175608
+  process:
+    cmd: python -m tese_pipeline.processing.features
+    deps:
+    - path: data/raw/flights_anac.parquet
+      hash: md5
+      md5: b97ebbe0bb210bb9d7825a91774d10c7
+      size: 1175608
+    - path: data/raw/meteo.parquet
+      hash: md5
+      md5: 50f2fb689b1e2b8cac02ecb79d06b2c2
+      size: 119752
+    - path: src/tese_pipeline/processing/
+      hash: md5
+      md5: 6e97eaef0ba431decf0c2e0c019ad1b7.dir
+      size: 35387
+      nfiles: 8
+    params:
+      params.yaml:
+        seed: 42
+    outs:
+    - path: data/processed/features.parquet
+      hash: md5
+      md5: 5d91ea47b5e8d4269523f347898aa53c
+      size: 1464074
+  synthesize:
+    cmd: python -m tese_pipeline.synthesis.generate_rides
+    deps:
+    - path: config/synthesis.yaml
+      hash: md5
+      md5: a2041361165ee5c2b11f09fb346eb186
+      size: 517
+    - path: data/processed/features.parquet
+      hash: md5
+      md5: 5d91ea47b5e8d4269523f347898aa53c
+      size: 1464074
+    - path: src/tese_pipeline/synthesis/generate_rides.py
+      hash: md5
+      md5: 380502d03a58cc07ca05f84748ec5c28
+      size: 4828
+    params:
+      params.yaml:
+        seed: 42
+        synthesis:
+          n_rides: 50000
+    outs:
+    - path: data/synthetic/rides.parquet
+      hash: md5
+      md5: 28c1c936698b3a9f09104074ccf1b99b
+      size: 572167
+  optimize:
+    cmd: python -m tese_pipeline.modeling.optimize
+    deps:
+    - path: data/synthetic/rides.parquet
+      hash: md5
+      md5: 28c1c936698b3a9f09104074ccf1b99b
+      size: 572167
+    - path: src/tese_pipeline/modeling/
+      hash: md5
+      md5: 916be6c9b322025749b4931be2229b8b.dir
+      size: 51391
+      nfiles: 12
+    params:
+      params.yaml:
+        model:
+          target: duration_min
+          cv_folds: 5
+          split: temporal
+          test_frac: 0.2
+          optuna:
+            n_trials: 100
+            timeout_s: 3600
+            direction: minimize
+            metric: rmse
+        seed: 42
+    outs:
+    - path: reports/metrics/best_params.json
+      hash: md5
+      md5: 7b1dd1b6da3479f8767c0a08f34e80cf
+      size: 272
+  train:
+    cmd: python -m tese_pipeline.modeling.train
+    deps:
+    - path: data/synthetic/rides.parquet
+      hash: md5
+      md5: 28c1c936698b3a9f09104074ccf1b99b
+      size: 572167
+    - path: reports/metrics/best_params.json
+      hash: md5
+      md5: 7b1dd1b6da3479f8767c0a08f34e80cf
+      size: 272
+    - path: src/tese_pipeline/modeling/train.py
+      hash: md5
+      md5: 3be0cbbfffa07219377d68a97b5329d8
+      size: 2142
+    params:
+      params.yaml:
+        model:
+          target: duration_min
+          cv_folds: 5
+          split: temporal
+          test_frac: 0.2
+          optuna:
+            n_trials: 100
+            timeout_s: 3600
+            direction: minimize
+            metric: rmse
+        seed: 42
+    outs:
+    - path: models/lgbm.txt
+      hash: md5
+      md5: 0c5af574a353ddd287a78c7f201c9f47
+      size: 1329527
+    - path: reports/metrics/eval.json
+      hash: md5
+      md5: 4da326b80e7a9f2ed86d96f399f601a5
+      size: 174

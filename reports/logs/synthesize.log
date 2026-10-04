@@ -1,0 +1,1 @@
+2026-10-04 18:26:00,904 | INFO    | __main__ | corridas sintéticas: 50000 | colunas: ['origin_flight', 'airport', 'ts_hour', 'hour', 'dow', 'month', 'is_rain', 'temperature_2m', 'wind_speed_10m', 'h3_origin', 'h3_destination', 'h3_origin_r7', 'dist_cells', 'distance_km', 'duration_min']

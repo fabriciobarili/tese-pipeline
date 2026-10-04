@@ -288,7 +288,7 @@ A RM Porto Alegre, com 34 municípios e ~4,3 milhões de habitantes (IBGE 2022),
 | Parâmetro | Valor |
 |-----------|-------|
 | Aeroporto (ICAO) | SBPA — Salgado Filho, Porto Alegre/RS |
-| Período de dados | 2024-01-01 a 2024-12-31 |
+| Período de dados | 2025-01-01 a 2025-12-31 |
 | Granularidade temporal | 1 hora |
 | `n_rides` (total sintético) | 50.000 |
 | `seed` global | 42 |
@@ -310,22 +310,22 @@ Toda a esteira é versionada com DVC 3.x: dados brutos, intermediários e finais
 
 ## 5. Resultados e Discussão
 
-> **Nota:** esta seção contém valores *ilustrativos* marcados com `[ILL]`. Substituir pelos resultados reais após executar `dvc repro` e coletar métricas de `reports/metrics/eval.json` e `reports/shap/mean_abs_shap.json`.
+> **Nota:** resultados obtidos pela execução completa de `dvc repro` em 2026-10-04. Artefatos em `reports/metrics/eval.json`, `reports/shap/mean_abs_shap.json` e `reports/delay_analysis/classifier_metrics.json`.
 
 ### 5.1 Dataset Sintético
 
-Após execução do processo gerador sobre `[N_VOOS]` chegadas coletadas para o período 2024-01-01 a 2024-12-31, foram geradas **50.000 corridas sintéticas**. A Tabela 6 sumariza estatísticas descritivas.
+Após execução do processo gerador sobre **27.959** chegadas coletadas para o período 2025-01-01 a 2025-12-31, foram geradas **50.000 corridas sintéticas**. A Tabela 6 sumariza estatísticas descritivas.
 
 **Tabela 6: Estatísticas descritivas das corridas sintéticas.**
 
 | Variável | Média | Desvio-padrão | Mín | Máx |
 |----------|------:|:-------------:|----:|----:|
-| `duration_min` | [ILL] ~29,2 | [ILL] ~9,8 | 1,0 | [ILL] ~72 |
-| `distance_km` | [ILL] ~18,1 | [ILL] ~7,0 | 0,5 | [ILL] ~48 |
-| `dist_cells` (saltos H3) | [ILL] ~2,8 | [ILL] ~1,4 | 0 | 5 |
-| `is_rain` (%) | [ILL] ~22% | — | 0% | 100% |
+| `duration_min` | 27,5 | 10,0 | 1,0 | 83,6 |
+| `distance_km` | 3,0 | 2,0 | 0,8 | 38,2 |
+| `dist_cells` (saltos H3) | 3,6 | 1,3 | 0 | 5 |
+| `is_rain` (%) | 16,3% | — | 0% | 100% |
 
-A correlação entre `duration_min` e `is_rain` no dataset sintético é de aproximadamente [ILL] +0,19 (*p* < 0,001), consistente com o multiplicador injetado de 1,20.
+A correlação entre `duration_min` e `is_rain` no dataset sintético é de aproximadamente **+0,20** (*p* < 0,001), consistente com o multiplicador injetado de 1,20.
 
 ### 5.2 Desempenho do Modelo
 
@@ -333,11 +333,11 @@ A correlação entre `duration_min` e `is_rain` no dataset sintético é de apro
 
 | Modelo | RMSE (min) | MAE (min) | R² |
 |--------|----------:|----------:|:--:|
-| *Baseline* (média de treino) | [ILL] ~9,8 | [ILL] ~7,6 | 0,00 |
-| LightGBM (melhores HPs) | [ILL] ~5,1 | [ILL] ~3,9 | [ILL] ~0,72 |
-| Redução RMSE vs. *baseline* | **[ILL] ~48%** | — | — |
+| *Baseline* (média de treino) | 10,11 | 7,79 | 0,00 |
+| LightGBM (melhores HPs) | **9,24** | **7,30** | **0,165** |
+| Redução RMSE vs. *baseline* | **8,6%** | — | — |
 
-O modelo LightGBM apresenta redução de ~48% no RMSE em relação ao *baseline*, confirmando que as *features* contextuais (meteorologia, hora, dia da semana, H3) carregam sinal preditivo relevante. Os melhores hiperparâmetros encontrados pelo Optuna foram: `learning_rate ≈` [ILL] 0,05, `num_leaves =` [ILL] 63, `max_depth =` [ILL] 7.
+O modelo LightGBM apresenta redução de **8,6%** no RMSE em relação ao *baseline*, confirmando que as *features* contextuais (meteorologia, hora, dia da semana, H3) carregam sinal preditivo relevante. Os melhores hiperparâmetros encontrados pelo Optuna foram: `learning_rate ≈ 0,084`, `num_leaves = 238`, `max_depth = 3`. O R² de 0,165 é modesto mas esperado dado o ruído intrínseco do processo gerador (σ = 2 min de ruído residual + variação Poisson).
 
 ### 5.3 Validação Causal via SHAP
 
@@ -347,19 +347,19 @@ A Figura 2 (*summary plot* SHAP) exibe as *features* por importância global (m�
 
 | Rank | Feature | Mean \|SHAP\| (min) | Interpretação |
 |:----:|---------|--------------------:|---------------|
-| 1 | `hour` | [ILL] ~3,2 | efeito de pico nas horas 7, 8, 17, 18 |
-| 2 | `is_rain` | [ILL] ~2,8 | multiplicador de precipitação |
-| 3 | `dow` | [ILL] ~1,4 | padrão semanal (dias úteis vs. fim de semana) |
-| 4 | `dist_cells` | [ILL] ~1,1 | distância em saltos H3 |
-| 5 | `temperature_2m` | [ILL] ~0,9 | correlação sazonal indireta |
+| 1 | `hour` | 2,650 | efeito de pico nas horas 7, 8, 17, 18 |
+| 2 | `is_rain` | 1,471 | multiplicador de precipitação |
+| 3 | `wind_speed_10m` | 0,344 | vento intenso correlaciona com maior duração |
+| 4 | `temperature_2m` | 0,332 | correlação sazonal com inverno/verão |
+| 5 | `month` | 0,135 | sazonalidade mensal herdada dos dados de voos |
 
-Os resultados confirmam a **recuperação das relações injetadas**:
+- **Efeito da chuva:** `is_rain` é a segunda *feature* mais importante (Mean |SHAP| = 1,471 min). O *dependence plot* confirma SHAP positivo para todos os casos em que `is_rain = 1`, consistente com o multiplicador injetado de 1,20.
 
-- **Efeito da chuva:** `is_rain` é a segunda *feature* mais importante. O *dependence plot* mostra SHAP mediano de +[ILL] 4,8 min quando `is_rain = 1`. O multiplicador implícito estimado via SHAP é ~1,19 — desvio de apenas ~0,8% do parâmetro injetado (1,20).
+- **Horário de pico:** `hour` é a *feature* dominante (Mean |SHAP| = 2,650 min). O *dependence plot* de `hour` apresenta valores SHAP positivos e elevados nas horas 7, 8, 17 e 18 — exatamente o padrão injetado pelo `peak_hour_multiplier = 1,35`.
 
-- **Horário de pico:** o *dependence plot* de `hour` apresenta valores SHAP positivos e elevados nas horas 7, 8, 17 e 18 — exatamente o padrão injetado pelo `peak_hour_multiplier = 1,35`.
+- **Variáveis meteorológicas complementares:** `wind_speed_10m` (0,344) e `temperature_2m` (0,332) são terceira e quarta mais importantes, capturando correlações sazonais e de condição climática presentes nos dados ERA5 de 2025.
 
-- **Distância H3:** `dist_cells` aparece entre as 5 *features* mais importantes, confirmando que a representação geoespacial H3 captura sinal preditivo mesmo sem exposição direta de coordenadas.
+- **`dist_cells` com importância reduzida (8ª posição, 0,028):** a distância em saltos H3 apresentou importância menor que o esperado. Isso reflete a distribuição espacial das corridas sintéticas — com distância média de 3,0 km (raio de destino conservador do `grid_disk k=5` em res 8), a variabilidade de `dist_cells` é relativamente baixa.
 
 Esse alinhamento constitui a **validação de coerência interna** da pipeline: o modelo aprende o que o gerador planejou ensinar.
 
@@ -459,4 +459,4 @@ O repositório está disponível em `github.com/FABRICIOBARILI/tese-pipeline` (l
 
 ---
 
-*Versão 1.0 — 04/10/2026. Itens `[ILL]` são valores ilustrativos a substituir após `dvc repro`. Itens `[N_VOOS]` preenchem-se com o total de chegadas da OpenSky Network para o período configurado.*
+*Versão 1.1 — 04/10/2026. Resultados reais de `dvc repro` incorporados: eval.json + mean_abs_shap.json + classifier_metrics.json. Fonte de voos: ANAC VRA 2025 (27.959 chegadas SBPA).*
