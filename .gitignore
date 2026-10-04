@@ -28,6 +28,9 @@ build/
 .pytest_cache/
 .ruff_cache/
 
+# Pasta de rascunhos e relatórios internos — não vai para o Git
+Work/
+
 # Sistema
 .DS_Store
 Thumbs.db

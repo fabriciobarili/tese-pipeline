@@ -1,2 +1,6 @@
 [core]
     analytics = false
+    remote = gcs
+
+['remote "gcs"']
+    url = gs://doutorado-501917-dvc/cache
