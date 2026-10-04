@@ -1,0 +1,5 @@
+outs:
+- md5: 85eb2f8b3638449f2d0a7fe785cb889e
+  size: 260891280
+  hash: md5
+  path: sul-261003_vias_h3r13.parquet

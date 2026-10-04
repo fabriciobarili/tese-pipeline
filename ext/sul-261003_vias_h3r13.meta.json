@@ -1,0 +1,34 @@
+{
+  "artifact": "ext/sul-261003_vias_h3r13.parquet",
+  "source_file": "ext\\sul-261003.osm.pbf",
+  "source_url": "https://download.geofabrik.de/south-america/brazil/sul.html",
+  "source_accessed": "2026-10-04",
+  "source_data_until": "2026-10-03T20:20:50Z",
+  "bbox": {
+    "min_lat": -31.5,
+    "max_lat": -29.0,
+    "min_lng": -52.5,
+    "max_lng": -50.5
+  },
+  "h3_resolution": 13,
+  "highway_types": [
+    "motorway",
+    "trunk",
+    "primary",
+    "secondary",
+    "tertiary",
+    "motorway_link",
+    "trunk_link",
+    "primary_link",
+    "secondary_link",
+    "tertiary_link",
+    "unclassified",
+    "residential",
+    "living_street",
+    "service"
+  ],
+  "n_cells": 11807501,
+  "n_ways": 202334,
+  "processing_seconds": 140.8,
+  "generator": "scripts/osm_to_h3.py"
+}
