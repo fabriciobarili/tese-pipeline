@@ -1,0 +1,51 @@
+[
+  {
+    "bucket": "gs://doutorado-501917-dvc",
+    "stage": "dvc-cache",
+    "purpose": "Remote DVC — cache hash-addressed de todos os artefatos da pipeline",
+    "versioning": true,
+    "lifecycle_days": null
+  },
+  {
+    "bucket": "gs://doutorado-501917-ext",
+    "stage": "external",
+    "purpose": "Dados geoespaciais externos: KMZ (aeroporto, UDHs), OSM PBF, H3 parquets",
+    "versioning": false,
+    "lifecycle_days": 365
+  },
+  {
+    "bucket": "gs://doutorado-501917-raw",
+    "stage": "ingest",
+    "purpose": "Dados brutos de ingestão: meteo.parquet (Open-Meteo) + flights.parquet (OpenSky)",
+    "versioning": false,
+    "lifecycle_days": 180
+  },
+  {
+    "bucket": "gs://doutorado-501917-processed",
+    "stage": "process",
+    "purpose": "Dados processados e feature-engineered: features.parquet (join meteo×voos + H3)",
+    "versioning": false,
+    "lifecycle_days": null
+  },
+  {
+    "bucket": "gs://doutorado-501917-synthetic",
+    "stage": "synthesize",
+    "purpose": "Corridas sintéticas: rides.parquet (50k corridas geradas pelo processo gerador)",
+    "versioning": true,
+    "lifecycle_days": null
+  },
+  {
+    "bucket": "gs://doutorado-501917-models",
+    "stage": "train",
+    "purpose": "Modelos treinados: lgbm.txt (LightGBM), best_params.json (Optuna)",
+    "versioning": true,
+    "lifecycle_days": null
+  },
+  {
+    "bucket": "gs://doutorado-501917-reports",
+    "stage": "reports",
+    "purpose": "Relatórios auditáveis: eval.json, summary.png (SHAP), logs de execução",
+    "versioning": false,
+    "lifecycle_days": 365
+  }
+]

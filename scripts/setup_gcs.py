@@ -133,7 +133,6 @@ def create_bucket(client: storage.Client, spec: BucketSpec) -> storage.Bucket:
 
     # lifecycle: mover para NEARLINE após N dias (economiza ~40% de custo de armazenamento)
     if spec.lifecycle_days is not None:
-        rule = storage.lifecycle.BucketLifecycleManagement()
         bucket.add_lifecycle_set_storage_class_rule(
             "NEARLINE",
             age=spec.lifecycle_days,
