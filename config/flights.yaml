@@ -9,3 +9,13 @@ kinds:
   - arrival
   - departure
 chunk_days: 7          # janela por chamada (respeita limites da API)
+
+# Coordenadas dos ICAOs — usadas para indexação H3 (h3.latlng_to_cell)
+# Fonte: ourairports.com / ICAO AIGD
+icao_coords:
+  SBGR:               # Guarulhos (GRU)
+    latitude: -23.4356
+    longitude: -46.4731
+  SBSP:               # Congonhas (CGH)
+    latitude: -23.6273
+    longitude: -46.6566

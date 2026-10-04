@@ -22,6 +22,11 @@ synthesis:
   # parâmetros do processo gerador em config/synthesis.yaml
   n_rides: 50000
 
+geospatial:
+  h3_resolution: 8          # resolução padrão (~0.74 km²; bairro/zona de demanda)
+  h3_macro_resolution: 7    # resolução macro (~5.16 km²; feature de zona ampla)
+  max_destination_k: 5      # raio máximo para destinos sintéticos (saltos H3)
+
 model:
   target: duration_min          # alvo da regressão (ajuste à hipótese da tese)
   cv_folds: 5

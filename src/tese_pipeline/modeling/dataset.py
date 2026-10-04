@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 
+# Colunas não-preditivas: identificadores, timestamps e chaves de rastreabilidade.
+# h3_origin / h3_destination / h3_origin_r7 são features válidas (one-hot ou label).
 DROP_COLS = ["ts_hour", "origin_flight", "time", "location", "_kind", "callsign"]
 
 
