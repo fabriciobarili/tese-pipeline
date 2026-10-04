@@ -1,0 +1,6 @@
+2026-10-04 18:14:34,393 | INFO    | __main__ | missing temperature_2m: 0.00%
+2026-10-04 18:14:34,394 | INFO    | __main__ | missing precipitation: 0.00%
+2026-10-04 18:14:34,394 | INFO    | __main__ | missing wind_speed_10m: 0.00%
+2026-10-04 18:14:34,400 | INFO    | __main__ | missing weather_code: 0.00%
+2026-10-04 18:14:34,400 | INFO    | __main__ | missing relative_humidity_2m: 0.00%
+2026-10-04 18:14:34,540 | INFO    | __main__ | meteo salvo: 8760 linhas, 1 locais

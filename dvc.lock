@@ -46,3 +46,61 @@ stages:
       hash: md5
       md5: d62782f454c4ce8dbd1eade0c6053732
       size: 1308681
+  ingest_meteo:
+    cmd: python -m tese_pipeline.ingestion.meteo_openmeteo
+    deps:
+    - path: config/meteo.yaml
+      hash: md5
+      md5: dde59ad66066481f304a922558183569
+      size: 458
+    - path: src/tese_pipeline/ingestion/meteo_openmeteo.py
+      hash: md5
+      md5: 6329d1f80b659649e810fcad5d134313
+      size: 2313
+    params:
+      params.yaml:
+        meteo:
+          provider: open-meteo
+          variables:
+          - temperature_2m
+          - precipitation
+          - wind_speed_10m
+          - weather_code
+          - relative_humidity_2m
+        seed: 42
+    outs:
+    - path: data/raw/meteo.parquet
+      hash: md5
+      md5: 50f2fb689b1e2b8cac02ecb79d06b2c2
+      size: 119752
+  delay_analysis:
+    cmd: python -m tese_pipeline.modeling.delay_classifier
+    deps:
+    - path: data/raw/flights_anac.parquet
+      hash: md5
+      md5: b97ebbe0bb210bb9d7825a91774d10c7
+      size: 1175608
+    - path: data/raw/meteo.parquet
+      hash: md5
+      md5: 50f2fb689b1e2b8cac02ecb79d06b2c2
+      size: 119752
+    - path: src/tese_pipeline/modeling/delay_classifier.py
+      hash: md5
+      md5: 274745fc15bdec94bf4e001dc014d6ce
+      size: 13166
+    params:
+      params.yaml:
+        seed: 42
+    outs:
+    - path: reports/delay_analysis/classifier_metrics.json
+      hash: md5
+      md5: 7f19bb3afcca56260ee36decb5f3cd1e
+      size: 1471
+    - path: reports/delay_analysis/delay_analysis_report.md
+      hash: md5
+      md5: 150b9af9c70d011614c3ed0dbb6f37e3
+      size: 5241
+    - path: reports/delay_analysis/knowledge_base.json
+      hash: md5
+      md5: d44f210806a782a1e2bb569689c7d076
+      size: 6629

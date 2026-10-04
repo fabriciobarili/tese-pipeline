@@ -1,0 +1,65 @@
+[
+  {
+    "classifier": "Random Forest (ROS)",
+    "accuracy": 0.7779,
+    "f1_weighted": 0.7787,
+    "mcc": 0.6449,
+    "roc_auc_weighted": 0.911,
+    "cv_f1_mean": 0.9697,
+    "cv_f1_std": 0.0033
+  },
+  {
+    "classifier": "Decision Tree (ROS)",
+    "accuracy": 0.7072,
+    "f1_weighted": 0.7197,
+    "mcc": 0.5701,
+    "roc_auc_weighted": 0.8891,
+    "cv_f1_mean": 0.7793,
+    "cv_f1_std": 0.0068
+  },
+  {
+    "classifier": "LightGBM (ROS)",
+    "accuracy": 0.7563,
+    "f1_weighted": 0.7639,
+    "mcc": 0.6267,
+    "roc_auc_weighted": 0.9131,
+    "cv_f1_mean": 0.8707,
+    "cv_f1_std": 0.0049
+  },
+  {
+    "classifier": "Logistic Reg. (ROS)",
+    "accuracy": 0.7702,
+    "f1_weighted": 0.757,
+    "mcc": 0.6284,
+    "roc_auc_weighted": 0.9015,
+    "cv_f1_mean": 0.7141,
+    "cv_f1_std": 0.0037
+  },
+  {
+    "classifier": "Random Forest (SMOTE)",
+    "accuracy": 0.7745,
+    "f1_weighted": 0.7754,
+    "mcc": 0.6424,
+    "roc_auc_weighted": 0.91,
+    "cv_f1_mean": 0.9227,
+    "cv_f1_std": 0.0024
+  },
+  {
+    "classifier": "Decision Tree (SMOTE)",
+    "accuracy": 0.7507,
+    "f1_weighted": 0.7544,
+    "mcc": 0.6107,
+    "roc_auc_weighted": 0.893,
+    "cv_f1_mean": 0.8166,
+    "cv_f1_std": 0.0029
+  },
+  {
+    "classifier": "LightGBM (SMOTE)",
+    "accuracy": 0.7873,
+    "f1_weighted": 0.7861,
+    "mcc": 0.6597,
+    "roc_auc_weighted": 0.9186,
+    "cv_f1_mean": 0.8902,
+    "cv_f1_std": 0.0023
+  }
+]

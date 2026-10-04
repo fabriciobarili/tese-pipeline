@@ -1,0 +1,21 @@
+2026-10-04 18:14:42,115 | INFO    | __main__ | Voos carregados: 27959 | Meteo linhas: 8760
+2026-10-04 18:14:42,224 | INFO    | __main__ | Dataset após limpeza: 26874 linhas
+2026-10-04 18:14:42,228 | INFO    | __main__ | Distribuição de classes:
+delay_category
+no_delay    16624
+small        6055
+medium       3045
+large        1150
+2026-10-04 18:14:42,228 | INFO    | __main__ | Features usadas (12): ['hour', 'dow', 'month', 'delay_dep_min', 'precipitation', 'wind_speed_10m', 'temperature_2m', 'weather_code', 'is_rain', 'route_type_enc', 'airline_icao_enc', 'origin_icao_enc']
+2026-10-04 18:14:42,250 | INFO    | __main__ | Treino: 21499 | Teste: 5375
+2026-10-04 18:14:42,552 | INFO    | __main__ | Treino após ROS:   55028
+2026-10-04 18:14:42,552 | INFO    | __main__ | Treino após SMOTE: 55028
+2026-10-04 18:15:07,300 | INFO    | __main__ | Random Forest (ROS)        acc=0.778  f1=0.779  mcc=0.645  roc=0.911  cv_f1=0.970±0.003
+2026-10-04 18:15:10,043 | INFO    | __main__ | Decision Tree (ROS)        acc=0.707  f1=0.720  mcc=0.570  roc=0.889  cv_f1=0.779±0.007
+2026-10-04 18:15:24,179 | INFO    | __main__ | LightGBM (ROS)             acc=0.756  f1=0.764  mcc=0.627  roc=0.913  cv_f1=0.871±0.005
+2026-10-04 18:15:32,372 | INFO    | __main__ | Logistic Reg. (ROS)        acc=0.770  f1=0.757  mcc=0.628  roc=0.901  cv_f1=0.714±0.004
+2026-10-04 18:16:13,076 | INFO    | __main__ | Random Forest (SMOTE)      acc=0.774  f1=0.775  mcc=0.642  roc=0.910  cv_f1=0.923±0.002
+2026-10-04 18:16:14,816 | INFO    | __main__ | Decision Tree (SMOTE)      acc=0.751  f1=0.754  mcc=0.611  roc=0.893  cv_f1=0.817±0.003
+2026-10-04 18:16:59,578 | INFO    | __main__ | LightGBM (SMOTE)           acc=0.787  f1=0.786  mcc=0.660  roc=0.919  cv_f1=0.890±0.002
+2026-10-04 18:16:59,804 | INFO    | __main__ | Base de conhecimento salva em reports\delay_analysis
+2026-10-04 18:16:59,804 | INFO    | __main__ | Melhor classificador: LightGBM (SMOTE) (F1=0.7861)
