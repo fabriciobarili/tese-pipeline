@@ -1,0 +1,52 @@
+[project]
+name = "tese-pipeline"
+version = "0.1.0"
+description = "Pipeline reprodutível da tese: meteorologia + voos -> corridas sintéticas -> IA explicável"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Fabricio Barili" }]
+dependencies = [
+  "pandas>=2.2",
+  "polars>=1.0",
+  "numpy>=1.26",
+  "pyarrow>=16.0",
+  "requests>=2.32",
+  "pydantic>=2.7",
+  "pyyaml>=6.0",
+  "lightgbm>=4.3",
+  "optuna>=3.6",
+  "shap>=0.45",
+  "scikit-learn>=1.5",
+  "dvc[gs]>=3.50",
+  "google-cloud-storage>=2.16",
+  "matplotlib>=3.8",
+  "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5", "black>=24.0", "mypy>=1.10"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.black]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

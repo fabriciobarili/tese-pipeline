@@ -1,0 +1,38 @@
+# Configuração científica central da pipeline.
+# TODA aleatoriedade e todo hiperparâmetro vivem aqui ou em config/*.yaml.
+# Nada de constantes mágicas no código.
+
+seed: 42
+
+meteo:
+  provider: open-meteo
+  variables:
+    - temperature_2m
+    - precipitation
+    - wind_speed_10m
+    - weather_code
+    - relative_humidity_2m
+  # período, locais e timezone em config/meteo.yaml
+
+flights:
+  provider: opensky
+  # aeroportos, janela e filtros em config/flights.yaml
+
+synthesis:
+  # parâmetros do processo gerador em config/synthesis.yaml
+  n_rides: 50000
+
+model:
+  target: duration_min          # alvo da regressão (ajuste à hipótese da tese)
+  cv_folds: 5
+  split: temporal               # NUNCA aleatório para dados dependentes do tempo
+  test_frac: 0.2
+  optuna:
+    n_trials: 100
+    timeout_s: 3600
+    direction: minimize
+    metric: rmse
+
+explain:
+  shap_sample: 2000
+  top_features: 20

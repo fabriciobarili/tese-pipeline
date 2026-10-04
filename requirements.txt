@@ -1,0 +1,23 @@
+# Dependências travadas para reprodutibilidade.
+#
+# Este arquivo é a fonte da verdade do AMBIENTE EXATO. Após a primeira instalação
+# via `pip install -e ".[dev]"`, REGENERE com versões exatas:
+#
+#     pip freeze --exclude-editable > requirements.txt
+#
+# Até lá, estas são as faixas mínimas (espelham o pyproject.toml):
+pandas>=2.2
+polars>=1.0
+numpy>=1.26
+pyarrow>=16.0
+requests>=2.32
+pydantic>=2.7
+pyyaml>=6.0
+lightgbm>=4.3
+optuna>=3.6
+shap>=0.45
+scikit-learn>=1.5
+dvc[gs]>=3.50
+google-cloud-storage>=2.16
+matplotlib>=3.8
+tqdm>=4.66

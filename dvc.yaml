@@ -1,0 +1,85 @@
+# Esteira declarativa e reprodutível. Rode `dvc repro` para reconstruir tudo.
+# Cada estágio declara deps/params/outs; o dvc.lock grava os hashes.
+stages:
+  ingest_meteo:
+    cmd: python -m tese_pipeline.ingestion.meteo_openmeteo
+    deps:
+      - src/tese_pipeline/ingestion/meteo_openmeteo.py
+      - config/meteo.yaml
+    params:
+      - seed
+      - meteo
+    outs:
+      - data/raw/meteo.parquet
+
+  ingest_flights:
+    cmd: python -m tese_pipeline.ingestion.flights_opensky
+    deps:
+      - src/tese_pipeline/ingestion/flights_opensky.py
+      - config/flights.yaml
+    params:
+      - seed
+      - flights
+    outs:
+      - data/raw/flights.parquet
+
+  process:
+    cmd: python -m tese_pipeline.processing.features
+    deps:
+      - src/tese_pipeline/processing/
+      - data/raw/meteo.parquet
+      - data/raw/flights.parquet
+    params:
+      - seed
+    outs:
+      - data/processed/features.parquet
+
+  synthesize:
+    cmd: python -m tese_pipeline.synthesis.generate_rides
+    deps:
+      - src/tese_pipeline/synthesis/generate_rides.py
+      - data/processed/features.parquet
+      - config/synthesis.yaml
+    params:
+      - seed
+      - synthesis
+    outs:
+      - data/synthetic/rides.parquet
+
+  optimize:
+    cmd: python -m tese_pipeline.modeling.optimize
+    deps:
+      - src/tese_pipeline/modeling/
+      - data/synthetic/rides.parquet
+    params:
+      - seed
+      - model
+    outs:
+      - reports/metrics/best_params.json
+
+  train:
+    cmd: python -m tese_pipeline.modeling.train
+    deps:
+      - src/tese_pipeline/modeling/train.py
+      - data/synthetic/rides.parquet
+      - reports/metrics/best_params.json
+    params:
+      - seed
+      - model
+    outs:
+      - models/lgbm.txt
+    metrics:
+      - reports/metrics/eval.json:
+          cache: false
+
+  explain:
+    cmd: python -m tese_pipeline.modeling.explain
+    deps:
+      - src/tese_pipeline/modeling/explain.py
+      - models/lgbm.txt
+      - data/synthetic/rides.parquet
+    params:
+      - seed
+      - explain
+    outs:
+      - reports/shap/

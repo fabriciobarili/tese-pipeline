@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Se usar este software, por favor cite-o conforme abaixo."
+title: "tese-pipeline: pipeline reprodutível de corridas sintéticas com IA explicável"
+authors:
+  - family-names: Barili
+    given-names: Fabricio
+version: 0.1.0
+date-released: 2026-10-04
+license: MIT
+repository-code: "https://github.com/FABRICIOBARILI/tese-pipeline"

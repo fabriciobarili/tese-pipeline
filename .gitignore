@@ -1,0 +1,33 @@
+# Dados versionados por DVC — nunca no Git
+/data/raw/*
+/data/interim/*
+/data/processed/*
+/data/synthetic/*
+/models/*
+/reports/shap/*
+/reports/figures/*
+/reports/metrics/optuna.db
+!**/.gitkeep
+
+# Segredos
+.env
+*.key
+service-account*.json
+credentials*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+dist/
+build/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Sistema
+.DS_Store
+Thumbs.db

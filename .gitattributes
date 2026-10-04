@@ -1,0 +1,20 @@
+# Normalização de line endings para cross-platform (Windows/Linux/macOS/Colab)
+* text=auto
+
+# Força LF para código e configs (compatível com Linux/Colab)
+*.py    text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.toml  text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.json  text eol=lf
+*.cff   text eol=lf
+*.sh    text eol=lf
+
+# Binários — sem conversão
+*.parquet  binary
+*.png      binary
+*.jpg      binary
+*.pdf      binary
+*.ipynb    text eol=lf

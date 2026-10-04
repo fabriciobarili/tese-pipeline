@@ -1,0 +1,3 @@
+# Padrões ignorados pelo DVC ao rastrear diretórios
+*.tmp
+.cache/

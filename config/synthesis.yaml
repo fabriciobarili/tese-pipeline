@@ -1,0 +1,15 @@
+# Parâmetros do processo gerador de corridas sintéticas.
+# TODA premissa fica aqui e é justificada em docs/decisions/0002-premissas-de-sintese.md
+n_rides: 50000
+demand:
+  rides_per_arrival_mean: 3.0        # corridas geradas por chegada (Poisson)
+duration_minutes:
+  base_mean: 25
+  base_sd: 8
+  rain_multiplier: 1.20              # efeito da chuva (premissa — ver ADR 0002)
+  peak_hour_multiplier: 1.35         # horas de pico: 7,8,17,18
+distance_km:
+  mean: 18
+  sd: 7
+noise_sd: 2.0
+peak_hours: [7, 8, 17, 18]
