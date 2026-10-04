@@ -1,0 +1,48 @@
+schema: '2.0'
+stages:
+  ingest_meteo_rm:
+    cmd: python -m tese_pipeline.ingestion.meteo_rm
+    deps:
+    - path: config/meteo_rm.yaml
+      hash: md5
+      md5: 3a641f0b01e56368357a4996ef0923fe
+      size: 2576
+    - path: src/tese_pipeline/ingestion/meteo_rm.py
+      hash: md5
+      md5: dd34dc728cc25648e85c8fe8d028da65
+      size: 3305
+    params:
+      params.yaml:
+        seed: 42
+    outs:
+    - path: data/raw/meteo_rm.parquet
+      hash: md5
+      md5: e73333edac8134350e8ed02198119607
+      size: 699665
+  thermal_comfort:
+    cmd: python -m tese_pipeline.processing.thermal_comfort
+    deps:
+    - path: config/meteo_rm.yaml
+      hash: md5
+      md5: 3a641f0b01e56368357a4996ef0923fe
+      size: 2576
+    - path: data/raw/meteo_rm.parquet
+      hash: md5
+      md5: e73333edac8134350e8ed02198119607
+      size: 699665
+    - path: src/tese_pipeline/processing/thermal_comfort.py
+      hash: md5
+      md5: abe08ed64dd0ec76ca7474507b3a6f92
+      size: 9863
+    params:
+      params.yaml:
+        geospatial:
+          h3_resolution: 8
+          h3_macro_resolution: 7
+          max_destination_k: 5
+        seed: 42
+    outs:
+    - path: data/processed/thermal_comfort.parquet
+      hash: md5
+      md5: d62782f454c4ce8dbd1eade0c6053732
+      size: 1308681

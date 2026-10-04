@@ -115,7 +115,8 @@ stages:
     params:
       - seed
     outs:
-      - reports/delay_analysis/
+      - reports/delay_analysis/knowledge_base.json
+      - reports/delay_analysis/delay_analysis_report.md
     metrics:
       - reports/delay_analysis/classifier_metrics.json:
           cache: false
