@@ -15,9 +15,9 @@ set -euo pipefail
 PROJECT="${PROJECT:-doutorado-501917}"
 ZONE="${ZONE:-southamerica-east1-a}"
 VM_NAME="${VM_NAME:-driver-sim}"
-MACHINE_TYPE="${MACHINE_TYPE:-e2-highcpu-16}"   # 16 vCPUs, família E2 (ampla disponibilidade)
-                                                # C4/C3 vêm com quota 0 por região em southamerica-east1;
-                                                # E2/N2 usam a quota geral de CPU. Alternativa: n2-highcpu-16
+MACHINE_TYPE="${MACHINE_TYPE:-e2-standard-16}"  # 16 vCPUs, 64 GB RAM
+                                                # e2-highcpu-16 (16 GB) estourou com 16 workers
+                                                # sobre 4,9M células (OOM). standard = 4GB/vCPU.
 REPO_URL="${REPO_URL:-https://github.com/fabriciobarili/tese-pipeline.git}"
 BRANCH="${BRANCH:-master}"
 GCS_OUT="${GCS_OUT:-gs://doutorado-501917-synthetic/driver_trips}"

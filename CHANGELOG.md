@@ -13,9 +13,10 @@ Histórico legível das evoluções da pipeline da tese. Versões seguem o padr�
   `.parquet` já gravados no GCS, agrupados por mês, para acompanhar o run.
 
 ### Alterado
-- Tipo de máquina padrão da VM: `e2-highcpu-16` (16 vCPUs). As famílias C4/C3
-  vêm com quota 0 por região em `southamerica-east1`; a E2 usa a quota geral de
-  CPU do projeto. Para mais vCPUs, solicitar aumento de `CPUS_ALL_REGIONS`.
+- Tipo de máquina padrão da VM: `e2-standard-16` (16 vCPUs, 64 GB). A
+  `e2-highcpu-16` (16 GB) sofreu OOM no run completo — 16 workers sobre 4,9M de
+  células H3 res 12 excedem 16 GB (pico ~27 GB). As famílias C4/C3 vêm com quota
+  0 por região em `southamerica-east1`; a E2 usa a quota geral de CPU do projeto.
 
 ## v0.17.0 — Geração de dados sintéticos por simulação de motoristas
 

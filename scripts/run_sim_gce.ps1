@@ -17,10 +17,9 @@ $ErrorActionPreference = 'Stop'
 $Project     = 'doutorado-501917'
 $Zone        = 'southamerica-east1-a'
 $VmName      = 'driver-sim'
-$MachineType = 'e2-highcpu-16'          # 16 vCPUs, familia E2 (ampla disponib.)
-                                        # C4/C3 vem com quota 0 por regiao em
-                                        # southamerica-east1; E2/N2 usam a quota
-                                        # geral de CPU. Alternativa: n2-highcpu-16.
+$MachineType = 'e2-standard-16'         # 16 vCPUs, 64 GB RAM. A e2-highcpu-16
+                                        # (16 GB) estourou com 16 workers sobre
+                                        # 4,9M celulas (OOM). standard = 4GB/vCPU.
 $RepoUrl     = 'https://github.com/fabriciobarili/tese-pipeline.git'
 $Branch      = 'master'
 $GcsOut      = 'gs://doutorado-501917-synthetic/driver_trips'
