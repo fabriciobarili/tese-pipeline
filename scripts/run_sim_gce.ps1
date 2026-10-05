@@ -17,9 +17,10 @@ $ErrorActionPreference = 'Stop'
 $Project     = 'doutorado-501917'
 $Zone        = 'southamerica-east1-a'
 $VmName      = 'driver-sim'
-$MachineType = 'c4-highcpu-16'          # 16 vCPUs (cabe na quota padrao de 32)
-                                        # quota CPUS_ALL_REGIONS limita o total;
-                                        # p/ -48/-192 peca aumento de quota.
+$MachineType = 'e2-highcpu-16'          # 16 vCPUs, familia E2 (ampla disponib.)
+                                        # C4/C3 vem com quota 0 por regiao em
+                                        # southamerica-east1; E2/N2 usam a quota
+                                        # geral de CPU. Alternativa: n2-highcpu-16.
 $RepoUrl     = 'https://github.com/fabriciobarili/tese-pipeline.git'
 $Branch      = 'master'
 $GcsOut      = 'gs://doutorado-501917-synthetic/driver_trips'

@@ -11,9 +11,9 @@ Histórico legível das evoluções da pipeline da tese. Versões seguem o padr�
   automaticamente (inclusive quando o SDK não está no PATH).
 
 ### Alterado
-- Tipo de máquina padrão da VM reduzido para `c4-highcpu-16` (16 vCPUs), cabendo
-  na quota padrão de 32 vCPUs do projeto. Para `-48/-192` é preciso solicitar
-  aumento da quota `CPUS_ALL_REGIONS`.
+- Tipo de máquina padrão da VM: `e2-highcpu-16` (16 vCPUs). As famílias C4/C3
+  vêm com quota 0 por região em `southamerica-east1`; a E2 usa a quota geral de
+  CPU do projeto. Para mais vCPUs, solicitar aumento de `CPUS_ALL_REGIONS`.
 
 ## v0.17.0 — Geração de dados sintéticos por simulação de motoristas
 
