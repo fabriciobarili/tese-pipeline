@@ -15,7 +15,8 @@ set -euo pipefail
 PROJECT="${PROJECT:-doutorado-501917}"
 ZONE="${ZONE:-southamerica-east1-a}"
 VM_NAME="${VM_NAME:-driver-sim}"
-MACHINE_TYPE="${MACHINE_TYPE:-c4-highcpu-48}"   # 48 vCPUs; use -192 no run full
+MACHINE_TYPE="${MACHINE_TYPE:-c4-highcpu-16}"   # 16 vCPUs (cabe na quota padrão de 32)
+                                                # p/ -48/-192 peça aumento de quota CPUS_ALL_REGIONS
 REPO_URL="${REPO_URL:-https://github.com/fabriciobarili/tese-pipeline.git}"
 BRANCH="${BRANCH:-master}"
 GCS_OUT="${GCS_OUT:-gs://doutorado-501917-synthetic/driver_trips}"

@@ -3,6 +3,18 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.17.1 — Execução na nuvem no Windows
+
+### Adicionado
+- **Script PowerShell** (`scripts/run_sim_gce.ps1`): versão nativa do runner de
+  nuvem para Windows, sem depender de bash/WSL. Resolve o caminho do `gcloud`
+  automaticamente (inclusive quando o SDK não está no PATH).
+
+### Alterado
+- Tipo de máquina padrão da VM reduzido para `c4-highcpu-16` (16 vCPUs), cabendo
+  na quota padrão de 32 vCPUs do projeto. Para `-48/-192` é preciso solicitar
+  aumento da quota `CPUS_ALL_REGIONS`.
+
 ## v0.17.0 — Geração de dados sintéticos por simulação de motoristas
 
 ### Adicionado
