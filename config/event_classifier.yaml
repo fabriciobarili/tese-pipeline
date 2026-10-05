@@ -1,0 +1,61 @@
+# Classificador de corridas sob evento de demanda (Alvo A) — LightGBM + SMOTE + SHAP.
+# Dados: data/synthetic/driver_trips (amostra do GCS). Alvo multiclasse derivado
+# de event_name. Features espaço-temporais/contexto, SEM vazar o rótulo.
+
+data:
+  # fonte dos dados: diretório LOCAL (amostra) OU prefixo gs:// (dataset completo).
+  # local: _tmp_big (amostra 21M já baixada). GCS: gs://doutorado-501917-synthetic/driver_trips
+  source: "_tmp_big"
+  test_frac: 0.30            # split estratificado; teste mantém distribuição natural
+
+target:
+  # mapeamento event_name -> classe (3 classes)
+  # "Voo Atrasado SBPA"            -> voo_atrasado
+  # "Estresse Termico *"           -> estresse_termico
+  # ""/"Corrida Encadeada"/outros  -> nenhum
+  classes: ["nenhum", "voo_atrasado", "estresse_termico"]
+
+features:
+  # SBPA (origem dos eventos) para derivar distância ao aeroporto
+  airport_lat: -29.9944
+  airport_lng: -51.1713
+  # features usadas (nenhuma vaza o rótulo: event_name/chained_ride excluídos)
+  numeric:
+    - hour
+    - weekday
+    - month
+    - trip_distance_km
+    - trip_time_min
+    - pickup_time_min
+    - h3_distance_to_call
+    - trip_seq
+    - dist_to_airport_km       # derivada: origem -> SBPA (great-circle)
+    - origin_lat
+    - origin_lng
+    - driver_rating
+    - driver_prior_trips
+  categorical:
+    - driver_rating_class       # label-encoded
+
+resampling:
+  # Dados grandes + forte desbalanceamento: subamostra a classe majoritária e
+  # aplica SMOTE nas minoritárias até um alvo por classe (treino balanceado e
+  # tratável). O TESTE permanece com a distribuição natural (avaliação honesta).
+  target_per_class: 400000      # linhas por classe no treino após reamostragem
+  smote_k_neighbors: 5
+
+model:
+  lgbm:
+    n_estimators: 300
+    learning_rate: 0.05
+    num_leaves: 128
+    max_depth: -1
+    subsample: 0.9
+    colsample_bytree: 0.8
+    random_state: 42
+    n_jobs: -1
+  cv_folds: 5
+
+explain:
+  shap_sample: 20000            # instâncias para o TreeExplainer
+  top_features: 15

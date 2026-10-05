@@ -3,6 +3,25 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.18.0 — Classificação de corridas sob evento de demanda (Alvo A)
+
+### Adicionado
+- **Classificador multiclasse** (`modeling/event_classifier.py`): prevê se uma
+  corrida ocorre sob evento de demanda — `nenhum` / `voo_atrasado` /
+  `estresse_termico` — com **LightGBM + SMOTE** e explicabilidade **SHAP**.
+  Alvo derivado de `event_name`; nenhuma feature vaza o rótulo
+  (`event_name`/`chained_ride` excluídos). Features espaço-temporais + contexto,
+  incluindo `dist_to_airport_km` (origem → SBPA).
+- **Rebalanceamento para dados grandes**: subamostra a classe majoritária e
+  aplica SMOTE nas minoritárias até um alvo por classe; o conjunto de TESTE
+  mantém a distribuição natural (avaliação honesta).
+- **Leitura do dataset completo via GCS** (gcsfs/pyarrow) além de amostra local.
+- **Runner de nuvem** (`scripts/run_event_gce.ps1`): roda o classificador no
+  dataset completo (267 M) numa VM `e2-highmem-16` (128 GB), lendo do GCS e
+  gravando os resultados em `gs://doutorado-501917-synthetic/event_analysis/`.
+- Config `config/event_classifier.yaml` com fonte de dados, features,
+  reamostragem, hiperparâmetros LightGBM e amostra SHAP.
+
 ## v0.17.1 — Execução na nuvem no Windows
 
 ### Adicionado
