@@ -1,0 +1,155 @@
+2026-10-04 22:18:46,072 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08
+2026-10-04 22:19:02,417 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:19:02,495 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:19:03,116 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:19:03,297 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:19:03,297 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:27:22,123 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08
+2026-10-04 22:27:29,842 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:27:29,907 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:27:30,139 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:27:30,294 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:27:30,294 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:27:32,397 | INFO    | __main__ | 2025-01-01 processado | corridas acumuladas: 1507
+2026-10-04 22:27:34,637 | INFO    | __main__ | 2025-01-02 processado | corridas acumuladas: 3171
+2026-10-04 22:27:37,556 | INFO    | __main__ | 2025-01-03 processado | corridas acumuladas: 5296
+2026-10-04 22:27:40,113 | INFO    | __main__ | 2025-01-04 processado | corridas acumuladas: 7219
+2026-10-04 22:27:42,469 | INFO    | __main__ | 2025-01-05 processado | corridas acumuladas: 9015
+2026-10-04 22:27:44,590 | INFO    | __main__ | 2025-01-06 processado | corridas acumuladas: 10632
+2026-10-04 22:27:46,631 | INFO    | __main__ | 2025-01-07 processado | corridas acumuladas: 12116
+2026-10-04 22:27:46,803 | INFO    | __main__ | corridas: 12116 | média/motorista/dia: 10.7 | expostas a evento: 10.2%
+2026-10-04 22:27:46,803 | INFO    | __main__ | driver_trips salvo: 12116 linhas | colunas: ['date', 'driver_id', 'trip_seq', 'request_ts', 'datetime', 'weekday', 'hour', 'origin_h3', 'destination_h3', 'origin_lat', 'origin_lng', 'dest_lat', 'dest_lng', 'h3_distance_to_call', 'trip_distance_km', 'pickup_time_min', 'trip_time_min', 'event_name', 'com_passageiro']
+2026-10-04 22:30:56,447 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08
+2026-10-04 22:31:04,350 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:31:04,400 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:31:04,692 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:31:04,823 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:31:04,823 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:31:12,681 | INFO    | __main__ | 2025-01-01 processado | corridas acumuladas: 6083
+2026-10-04 22:31:22,404 | INFO    | __main__ | 2025-01-02 processado | corridas acumuladas: 13638
+2026-10-04 22:31:38,342 | INFO    | __main__ | 2025-01-03 processado | corridas acumuladas: 26133
+2026-10-04 22:31:58,160 | INFO    | __main__ | 2025-01-04 processado | corridas acumuladas: 41385
+2026-10-04 22:32:14,978 | INFO    | __main__ | 2025-01-05 processado | corridas acumuladas: 53422
+2026-10-04 22:32:29,268 | INFO    | __main__ | 2025-01-06 processado | corridas acumuladas: 63198
+2026-10-04 22:32:41,663 | INFO    | __main__ | 2025-01-07 processado | corridas acumuladas: 71560
+2026-10-04 22:32:42,135 | INFO    | __main__ | corridas: 71560 | média/motorista/dia: 62.5 | expostas a evento: 7.9%
+2026-10-04 22:32:42,135 | INFO    | __main__ | driver_trips salvo: 71560 linhas | colunas: ['date', 'driver_id', 'trip_seq', 'request_ts', 'datetime', 'weekday', 'hour', 'origin_h3', 'destination_h3', 'origin_lat', 'origin_lng', 'dest_lat', 'dest_lng', 'h3_distance_to_call', 'trip_distance_km', 'pickup_time_min', 'trip_time_min', 'event_name', 'com_passageiro']
+2026-10-04 22:37:24,773 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08
+2026-10-04 22:37:36,096 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:37:36,216 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:37:45,658 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:37:45,758 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:37:45,759 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:38:06,600 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08
+2026-10-04 22:38:16,837 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:38:16,907 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:38:17,325 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:38:17,440 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:38:17,440 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:38:28,605 | INFO    | __main__ | 2025-01-01 processado | corridas acumuladas: 5964
+2026-10-04 22:38:46,117 | INFO    | __main__ | 2025-01-02 processado | corridas acumuladas: 14662
+2026-10-04 22:39:06,122 | INFO    | __main__ | 2025-01-03 processado | corridas acumuladas: 24155
+2026-10-04 22:39:24,403 | INFO    | __main__ | 2025-01-04 processado | corridas acumuladas: 33730
+2026-10-04 22:39:41,089 | INFO    | __main__ | 2025-01-05 processado | corridas acumuladas: 41593
+2026-10-04 22:39:53,764 | INFO    | __main__ | 2025-01-06 processado | corridas acumuladas: 47996
+2026-10-04 22:40:05,156 | INFO    | __main__ | 2025-01-07 processado | corridas acumuladas: 53682
+2026-10-04 22:41:38,980 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08
+2026-10-04 22:41:45,718 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:41:45,772 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:41:45,973 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:41:46,063 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:41:46,063 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:41:51,583 | INFO    | __main__ | 2025-01-01 processado | corridas acumuladas: 4482
+2026-10-04 22:41:58,729 | INFO    | __main__ | 2025-01-02 processado | corridas acumuladas: 10340
+2026-10-04 22:42:06,092 | INFO    | __main__ | 2025-01-03 processado | corridas acumuladas: 16277
+2026-10-04 22:42:12,561 | INFO    | __main__ | 2025-01-04 processado | corridas acumuladas: 21653
+2026-10-04 22:42:18,671 | INFO    | __main__ | 2025-01-05 processado | corridas acumuladas: 26532
+2026-10-04 22:42:23,714 | INFO    | __main__ | 2025-01-06 processado | corridas acumuladas: 30638
+2026-10-04 22:42:27,966 | INFO    | __main__ | 2025-01-07 processado | corridas acumuladas: 34076
+2026-10-04 22:42:28,355 | INFO    | __main__ | corridas: 34076 | média/motorista/dia: 29.8 | expostas a evento: 9.3% | madrugada(0-5h): 2.0%
+2026-10-04 22:42:28,356 | INFO    | __main__ | driver_trips salvo em data\synthetic\driver_trips | colunas: ['date', 'driver_id', 'trip_seq', 'request_ts', 'datetime', 'weekday', 'hour', 'origin_h3', 'destination_h3', 'origin_lat', 'origin_lng', 'dest_lat', 'dest_lng', 'h3_distance_to_call', 'trip_distance_km', 'pickup_time_min', 'trip_time_min', 'event_name', 'com_passageiro', 'month']
+2026-10-04 22:43:26,482 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08
+2026-10-04 22:43:33,309 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:43:33,362 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:43:33,618 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:43:33,759 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:43:33,759 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:43:39,283 | INFO    | __main__ | 2025-01-01 processado | corridas acumuladas: 4337
+2026-10-04 22:43:46,641 | INFO    | __main__ | 2025-01-02 processado | corridas acumuladas: 10337
+2026-10-04 22:43:53,978 | INFO    | __main__ | 2025-01-03 processado | corridas acumuladas: 16302
+2026-10-04 22:44:00,567 | INFO    | __main__ | 2025-01-04 processado | corridas acumuladas: 21784
+2026-10-04 22:44:06,603 | INFO    | __main__ | 2025-01-05 processado | corridas acumuladas: 26626
+2026-10-04 22:44:11,561 | INFO    | __main__ | 2025-01-06 processado | corridas acumuladas: 30621
+2026-10-04 22:44:15,726 | INFO    | __main__ | 2025-01-07 processado | corridas acumuladas: 34008
+2026-10-04 22:44:16,046 | INFO    | __main__ | corridas: 34008 | média/motorista/dia: 30.0 | expostas a evento: 9.3% | madrugada(0-5h): 1.4%
+2026-10-04 22:44:16,047 | INFO    | __main__ | driver_trips salvo em data\synthetic\driver_trips | colunas: ['date', 'driver_id', 'trip_seq', 'request_ts', 'datetime', 'weekday', 'hour', 'origin_h3', 'destination_h3', 'origin_lat', 'origin_lng', 'dest_lat', 'dest_lng', 'h3_distance_to_call', 'trip_distance_km', 'pickup_time_min', 'trip_time_min', 'event_name', 'com_passageiro', 'month']
+2026-10-04 22:46:45,187 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08
+2026-10-04 22:46:58,786 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:46:58,885 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:46:59,338 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:46:59,503 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:46:59,503 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:47:08,156 | INFO    | __main__ | 2025-01-01 processado | corridas acumuladas: 4589
+2026-10-04 22:47:20,551 | INFO    | __main__ | 2025-01-02 processado | corridas acumuladas: 10651
+2026-10-04 22:47:32,205 | INFO    | __main__ | 2025-01-03 processado | corridas acumuladas: 16618
+2026-10-04 22:47:42,203 | INFO    | __main__ | 2025-01-04 processado | corridas acumuladas: 21934
+2026-10-04 22:47:51,028 | INFO    | __main__ | 2025-01-05 processado | corridas acumuladas: 26653
+2026-10-04 22:48:00,370 | INFO    | __main__ | 2025-01-06 processado | corridas acumuladas: 30813
+2026-10-04 22:48:09,198 | INFO    | __main__ | 2025-01-07 processado | corridas acumuladas: 34306
+2026-10-04 22:48:09,901 | INFO    | __main__ | corridas: 34306 | média/motorista/dia: 30.0 | expostas a evento: 12.4% | madrugada(0-5h): 1.3%
+2026-10-04 22:48:09,901 | INFO    | __main__ | driver_trips salvo em data\synthetic\driver_trips | colunas: ['date', 'driver_id', 'trip_seq', 'request_ts', 'datetime', 'weekday', 'hour', 'origin_h3', 'destination_h3', 'origin_lat', 'origin_lng', 'dest_lat', 'dest_lng', 'h3_distance_to_call', 'trip_distance_km', 'pickup_time_min', 'trip_time_min', 'event_name', 'chained_ride', 'trip_score', 'driver_rating', 'driver_rating_class', 'driver_prior_trips', 'com_passageiro', 'month']
+2026-10-04 22:52:52,592 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08 | workers: 1 | saída: data/synthetic/driver_trips
+2026-10-04 22:53:00,483 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:53:00,529 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:53:00,756 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:53:00,856 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:53:00,856 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:53:00,857 | INFO    | __main__ | motoristas: 200
+2026-10-04 22:53:06,375 | INFO    | __main__ | 2025-01-01 processado | corridas acumuladas: 4188
+2026-10-04 22:53:14,017 | INFO    | __main__ | 2025-01-02 processado | corridas acumuladas: 10149
+2026-10-04 22:53:22,197 | INFO    | __main__ | 2025-01-03 processado | corridas acumuladas: 16173
+2026-10-04 22:53:29,127 | INFO    | __main__ | 2025-01-04 processado | corridas acumuladas: 21728
+2026-10-04 22:53:35,814 | INFO    | __main__ | 2025-01-05 processado | corridas acumuladas: 26810
+2026-10-04 22:53:40,888 | INFO    | __main__ | 2025-01-06 processado | corridas acumuladas: 30691
+2026-10-04 22:53:45,300 | INFO    | __main__ | 2025-01-07 processado | corridas acumuladas: 34371
+2026-10-04 22:53:45,655 | INFO    | __main__ | corridas: 34371 | média/motorista/dia: 29.9 | evento: 14.2% | madrugada(0-5h): 1.4% | encadeadas: 5.7%
+2026-10-04 22:53:45,759 | INFO    | __main__ | driver_trips salvo em data/synthetic/driver_trips | total de corridas: 34371
+2026-10-04 22:53:59,467 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08 | workers: 4 | saída: data/synthetic/driver_trips
+2026-10-04 22:54:17,096 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:54:17,187 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:54:17,844 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:54:17,981 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:54:17,981 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:54:17,982 | INFO    | __main__ | motoristas: 200
+2026-10-04 22:54:40,467 | INFO    | __main__ | batch 3 concluído: 8526 corridas
+2026-10-04 22:54:41,179 | INFO    | __main__ | batch 2 concluído: 8749 corridas
+2026-10-04 22:54:41,586 | INFO    | __main__ | batch 1 concluído: 8722 corridas
+2026-10-04 22:54:41,631 | INFO    | __main__ | batch 0 concluído: 8505 corridas
+2026-10-04 22:54:41,740 | INFO    | __main__ | driver_trips salvo em data/synthetic/driver_trips | total de corridas: 34502
+2026-10-04 22:56:14,603 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08 | workers: 4 | saída: data/synthetic/driver_trips
+2026-10-04 22:56:26,068 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 22:56:26,146 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 22:56:26,505 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 22:56:26,705 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 22:56:26,705 | INFO    | __main__ | total de eventos: 86
+2026-10-04 22:56:26,706 | INFO    | __main__ | motoristas: 200
+2026-10-04 22:56:59,936 | INFO    | __main__ | batch 2 concluído: 8384 corridas
+2026-10-04 22:57:00,165 | INFO    | __main__ | batch 0 concluído: 8211 corridas
+2026-10-04 22:57:00,314 | INFO    | __main__ | batch 3 concluído: 8658 corridas
+2026-10-04 22:57:00,408 | INFO    | __main__ | batch 1 concluído: 8598 corridas
+2026-10-04 22:57:00,508 | INFO    | __main__ | driver_trips salvo em data/synthetic/driver_trips | total de corridas: 33851
+2026-10-04 23:00:28,632 | INFO    | __main__ | período simulado: 2025-01-01 → 2025-01-08 | workers: 1 | saída: data/synthetic/driver_trips
+2026-10-04 23:00:38,414 | INFO    | __main__ | malha viária: 148337 células H3 res 12 (fonte: 150000 linhas r13)
+2026-10-04 23:00:38,477 | INFO    | __main__ | células do aeroporto: 13 (res 12; 13 sobre vias)
+2026-10-04 23:00:38,807 | INFO    | __main__ | eventos de voo atrasado: 52 (peso ∝ passageiros/janela)
+2026-10-04 23:00:39,018 | INFO    | __main__ | eventos de estresse térmico: 34
+2026-10-04 23:00:39,018 | INFO    | __main__ | total de eventos: 86
+2026-10-04 23:00:39,019 | INFO    | __main__ | motoristas: 200
+2026-10-04 23:00:45,804 | INFO    | __main__ | 2025-01-01 processado | corridas acumuladas: 4275
+2026-10-04 23:00:55,086 | INFO    | __main__ | 2025-01-02 processado | corridas acumuladas: 10388
+2026-10-04 23:01:04,389 | INFO    | __main__ | 2025-01-03 processado | corridas acumuladas: 16338
+2026-10-04 23:01:12,230 | INFO    | __main__ | 2025-01-04 processado | corridas acumuladas: 21857
+2026-10-04 23:01:18,769 | INFO    | __main__ | 2025-01-05 processado | corridas acumuladas: 26461
+2026-10-04 23:01:24,018 | INFO    | __main__ | 2025-01-06 processado | corridas acumuladas: 30466
+2026-10-04 23:01:28,844 | INFO    | __main__ | 2025-01-07 processado | corridas acumuladas: 34116
+2026-10-04 23:01:28,932 | INFO    | __main__ | driver_trips salvo em data/synthetic/driver_trips | total de corridas: 34116

@@ -1,0 +1,154 @@
+# Premissas da simulação baseada em agentes (motoristas).
+# Adaptado de 02_GERACAO_DE_DADOS/distribuicao_nao_simulada_v6_final_4.py (Colab).
+#
+# Diferença de paradigma em relação a config/synthesis.yaml:
+#   - synthesis.yaml  -> gerador Poisson por chegada de voo (corrida isolada)
+#   - este arquivo     -> simulação de MOTORISTAS percorrendo a malha viária,
+#                         recebendo chamados cuja demanda é modulada por EVENTOS
+#                         (voos atrasados no SBPA + estresse térmico UTCI).
+#
+# Cada corrida produzida carrega dado "contribuído pelo motorista":
+# origem (lat/lng), datetime e booleano com_passageiro.
+
+# ---------------------------------------------------------------------------
+# Execução (local ou hyperscaler)
+# ---------------------------------------------------------------------------
+runtime:
+  # 1 = single-process; 0 = todos os vCPUs; N = N processos paralelos.
+  # No run completo (30k motoristas) use 0 numa VM alta-vCPU / Cloud Batch.
+  n_workers: 1
+  # destino do dataset particionado: caminho local OU gs://bucket/prefix (GCS).
+  output_dir: "data/synthetic/driver_trips"
+  # streaming: grava dia a dia (RAM constante). Ligue no run completo (300M+
+  # linhas); para runs curtos locais pode deixar desligado.
+  stream_per_day: false
+
+# ---------------------------------------------------------------------------
+# Período simulado
+# ---------------------------------------------------------------------------
+period:
+  start_date: "2025-01-01"
+  # max_days limita o horizonte para execução local tratável.
+  # Para o run completo da tese (Colab/máquina grande) use max_days: 365.
+  max_days: 7
+
+# ---------------------------------------------------------------------------
+# Frota de motoristas
+# ---------------------------------------------------------------------------
+drivers:
+  # Referência roda 30.000 motoristas. Default local reduzido para terminar
+  # em minutos; escale conforme a capacidade da máquina.
+  total_drivers: 200
+  # Probabilidade de o motorista trabalhar em cada dia da semana.
+  # CONVENÇÃO: 0=domingo ... 6=sábado (indexado por (weekday()+1)%7 no código,
+  # pois datetime.weekday() usa 0=segunda).
+  work_probability: {0: 0.8, 1: 0.7, 2: 0.6, 3: 0.7, 4: 1.0, 5: 1.0, 6: 0.9}
+  # Jornada diária sorteada em U(min, max) horas; piso de 8h e TETO de max_hours.
+  daily_hours_min: 9
+  daily_hours_max: 11
+  daily_hours_cap: 12          # nenhum motorista ultrapassa 12h de trabalho
+  # Janela de ativação do turno (horário local). 85% dos motoristas iniciam
+  # dentro de [min, max] (turno diurno). Os 15% restantes são turno NOTURNO:
+  # iniciam às 18h e seguem cruzando a meia-noite, cobrindo a madrugada.
+  shift_start_hour_min: 4.0
+  shift_start_hour_max: 14.0
+  shift_window_fraction: 0.85
+  night_shift_start_hour: 18.0
+
+# ---------------------------------------------------------------------------
+# Malha viária (conjunto de células H3 trafegáveis)
+# ---------------------------------------------------------------------------
+roads:
+  source_parquet: "ext/sul-261003_vias_h3r13.parquet"
+  # Resolução H3 da simulação. A fonte é res 13; agregamos ao parent nesta res.
+  h3_resolution: 12
+  # Amostra determinística de células viárias para limitar memória/tempo.
+  # null = usa todas (~1,7M em res 12). Default amostra para run local.
+  max_road_cells: 150000
+
+# ---------------------------------------------------------------------------
+# Modelo de tempo e distância (calibrado em ~30 corridas/dia na referência)
+# ---------------------------------------------------------------------------
+mobility:
+  urban_speed_kmh: 50          # velocidade urbana (trajetos curtos)
+  interurban_speed_kmh: 90     # velocidade interurbana (trajetos longos)
+  interurban_threshold_km: 15  # acima deste limiar usa velocidade interurbana
+  speed_sd: 4                  # ruído gaussiano da velocidade
+  km_per_h3_cell: 0.035        # fator distância-por-salto H3 (ajuste res 12)
+  idle_mean_minutes: 2.0       # tempo ocioso médio (exponencial)
+  idle_max_minutes: 5.0        # truncagem da cauda do exponencial
+  idle_step_minutes: 1.0       # passo de avanço quando não há chamado
+  calls_per_idle_step: 50      # tentativas de chamado por passo ocioso
+  max_trip_km: 25              # teto do trajeto urbano com passageiro
+
+# ---------------------------------------------------------------------------
+# Meta de produtividade e retorno à residência
+# ---------------------------------------------------------------------------
+trips:
+  # cada motorista deve fechar o dia com, em média, 25–35 corridas.
+  target_per_day_min: 25
+  target_per_day_max: 35
+  # ao atingir N corridas, os destinos passam a convergir para o ponto que
+  # gerou a 1ª corrida do dia (motorista "voltando para casa").
+  return_home_after: 20
+  return_radius_km: 8
+
+# ---------------------------------------------------------------------------
+# Nota do motorista (reputação)
+# ---------------------------------------------------------------------------
+ratings:
+  # nota global do motorista varia em [min, max]
+  min: 4.79
+  max: 4.99
+  mode: 4.93                   # moda da triangular (maioria nota alta/média)
+  high_threshold: 4.95         # nota alta  >= 4.95
+  medium_threshold: 4.85       # nota média 4.85–4.94; regular < 4.85
+  # histórico: todo motorista já tem muitas corridas; a nota é diluída nelas
+  prior_trips_min: 10000
+  prior_trips_max: 20000
+  # cada corrida recebe uma avaliação de 3 a 5 (diluída no histórico)
+  per_trip_min: 3.0
+  per_trip_max: 5.0
+  per_trip_sd: 0.35
+  # corrida encadeada: motorista NOTA ALTA, ao finalizar, recebe chamada perto
+  # do destino. Pode recusar (accept_prob) se não for uma boa corrida.
+  chain_offer_prob: 0.6
+  chain_accept_prob: 0.7
+  chain_pickup_radius_km: 3
+
+# ---------------------------------------------------------------------------
+# Probabilidade de chamado em função da distância H3 (origem local)
+# ---------------------------------------------------------------------------
+call:
+  base_p: 0.85                # probabilidade base dentro do raio
+  floor_p: 0.70               # piso dentro do raio
+  max_dist: 120               # raio de origem (saltos H3)
+  dest_max_dist: 600          # raio de destino (saltos H3)
+
+# ---------------------------------------------------------------------------
+# Eventos de demanda — modulam onde os chamados surgem
+# ---------------------------------------------------------------------------
+events:
+  airport_cells_json: "ext/Aeroporto Salgado Filho.json"
+  # Voos atrasados (ANAC VRA): cada HORA com chegada atrasada vira uma janela de
+  # demanda no SBPA, com peso PROPORCIONAL ao volume de passageiros da janela.
+  # Como a VRA não traz contagem de passageiros, usamos o nº de chegadas na hora
+  # como proxy, escalado por passageiros/voo (assentos médios × fator de ocupação).
+  flight_delay:
+    enabled: true
+    passengers_per_flight: 150   # proxy: assento médio × load factor típico
+    weight_per_passenger: 1.0    # escala do peso (peso = pax_na_janela × este fator)
+  # Estresse térmico (UTCI em SBPA): janela de 1h ponderada por severidade.
+  thermal_stress:
+    enabled: true
+    location: "SBPA"
+    base_weight: 350
+    # categoria utci_stress -> severidade (peso = base_weight * severidade)
+    severity:
+      slight_cold: 4
+      moderate_cold: 5
+      moderate_heat: 5
+      strong_cold: 6
+      strong_heat: 6
+      very_strong_cold: 7
+      very_strong_heat: 7
