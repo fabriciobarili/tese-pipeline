@@ -9,6 +9,8 @@ Histórico legível das evoluções da pipeline da tese. Versões seguem o padr�
 - **Script PowerShell** (`scripts/run_sim_gce.ps1`): versão nativa do runner de
   nuvem para Windows, sem depender de bash/WSL. Resolve o caminho do `gcloud`
   automaticamente (inclusive quando o SDK não está no PATH).
+- **Monitor de progresso** (`scripts/check_sim_progress.ps1`): conta os shards
+  `.parquet` já gravados no GCS, agrupados por mês, para acompanhar o run.
 
 ### Alterado
 - Tipo de máquina padrão da VM: `e2-highcpu-16` (16 vCPUs). As famílias C4/C3
