@@ -230,24 +230,45 @@ def main() -> None:
              len(X_tr), len(X_te))
 
     X_rb, y_rb = resample_train(X_tr, y_tr, cfg, seed)
+    del X_tr, y_tr
 
     lp = cfg["model"]["lgbm"]
     clf = lgb.LGBMClassifier(objective="multiclass", num_class=len(classes),
                              verbose=-1, **lp)
 
-    # CV leve (macro-F1) num subconjunto do treino rebalanceado
-    n_cv = min(300000, len(X_rb))
-    idx = np.random.RandomState(seed).choice(len(X_rb), n_cv, replace=False)
-    cv = StratifiedKFold(n_splits=cfg["model"]["cv_folds"], shuffle=True, random_state=seed)
-    cv_scores = cross_val_score(clf, X_rb.iloc[idx], pd.Series(y_rb).iloc[idx],
-                                cv=cv, scoring="f1_macro", n_jobs=-1)
-    LOG.info("CV f1_macro: %.4f ± %.4f", cv_scores.mean(), cv_scores.std())
+    # CV leve (macro-F1) num subconjunto do treino rebalanceado.
+    # n_jobs=1 no cross_val_score: o paralelismo fica DENTRO do LightGBM; evita
+    # sobre-subscrição (cross_val_score n_jobs=-1 × LGBM n_jobs=-1 trava a VM).
+    folds = int(cfg["model"].get("cv_folds", 0) or 0)
+    if folds > 1:
+        n_cv = min(300000, len(X_rb))
+        idx = np.random.RandomState(seed).choice(len(X_rb), n_cv, replace=False)
+        cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
+        cv_scores = cross_val_score(clf, X_rb.iloc[idx], pd.Series(y_rb).iloc[idx],
+                                    cv=cv, scoring="f1_macro", n_jobs=1)
+        cv_mean, cv_std = float(cv_scores.mean()), float(cv_scores.std())
+        LOG.info("CV f1_macro: %.4f ± %.4f", cv_mean, cv_std)
+    else:
+        cv_mean = cv_std = float("nan")
+        LOG.info("CV desativada (cv_folds<=1)")
 
+    LOG.info("treinando modelo final em %d linhas...", len(X_rb))
     clf.fit(X_rb, y_rb)
+
+    # avaliação pode ser cara em teste gigante; opcionalmente subamostra
+    # (mantendo a distribuição natural via estratificação).
+    eval_cap = int(cfg["model"].get("eval_max_rows", 0) or 0)
+    if eval_cap and len(X_te) > eval_cap:
+        X_te, _, y_te, _ = train_test_split(X_te, y_te, train_size=eval_cap,
+                                            stratify=y_te, random_state=seed)
+        LOG.info("teste subamostrado para %d (avaliação tratável)", len(X_te))
+
+    LOG.info("avaliando em %d linhas de teste...", len(X_te))
     metrics = evaluate(clf, X_te, y_te, classes)
-    metrics["cv_f1_macro_mean"] = round(float(cv_scores.mean()), 4)
-    metrics["cv_f1_macro_std"] = round(float(cv_scores.std()), 4)
+    metrics["cv_f1_macro_mean"] = round(cv_mean, 4) if cv_mean == cv_mean else None
+    metrics["cv_f1_macro_std"] = round(cv_std, 4) if cv_std == cv_std else None
     metrics["target_distribution_pct"] = dist
+    metrics["n_test"] = int(len(X_te))
     LOG.info("TESTE: acc=%.3f f1_macro=%.3f f1_w=%.3f mcc=%.3f roc=%.3f",
              metrics["accuracy"], metrics["f1_macro"], metrics["f1_weighted"],
              metrics["mcc"], metrics["roc_auc_ovr_weighted"])

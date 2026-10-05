@@ -45,6 +45,7 @@ p = "config/event_classifier.yaml"
 cfg = yaml.safe_load(open(p, encoding="utf-8"))
 cfg["data"]["source"] = "__GCS_DATA__"
 cfg["resampling"]["target_per_class"] = 1000000   # 1M/classe no treino balanceado
+cfg["model"]["eval_max_rows"] = 10000000           # teste subamostrado a 10M (tratável)
 yaml.safe_dump(cfg, open(p, "w", encoding="utf-8"), allow_unicode=True)
 PY
 
