@@ -62,7 +62,7 @@ def main() -> None:
     m = p["model"]
 
     df = pd.read_parquet("data/synthetic/rides.parquet")
-    x, y = make_xy(df, m["target"])
+    x, y = make_xy(df, m["target"], p.get("feature_eng"))
 
     Path("reports/metrics").mkdir(parents=True, exist_ok=True)
     sampler = optuna.samplers.TPESampler(seed=p["seed"])

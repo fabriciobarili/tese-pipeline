@@ -38,6 +38,15 @@ model:
     direction: minimize
     metric: rmse
 
+# Engenharia de features aplicada em make_xy (lógica do 05_6_FeatureEng_...). Backward-looking
+# (sem vazamento do futuro). climate_cols lista só o que existe em rides.parquet.
+feature_eng:
+  enabled: true
+  time_col: ts_hour
+  climate_cols: [temperature_2m, wind_speed_10m]   # relative_humidity/precip/pressure ausentes
+  horizontes: ["3h", "6h", "24h"]                  # médias móveis por tempo
+  ciclicas: {hour: 24, dow: 7, month: 12}          # codificação sin/cos
+
 explain:
   shap_sample: 2000
   top_features: 20

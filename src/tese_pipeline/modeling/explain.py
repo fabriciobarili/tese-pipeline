@@ -28,7 +28,7 @@ def main() -> None:
 
     model = lgb.Booster(model_file="models/lgbm.txt")
     df = pd.read_parquet("data/synthetic/rides.parquet")
-    x, _ = make_xy(df, p["model"]["target"])
+    x, _ = make_xy(df, p["model"]["target"], p.get("feature_eng"))
     sample = x.sample(min(ex["shap_sample"], len(x)), random_state=p["seed"])
 
     explainer = shap.TreeExplainer(model)

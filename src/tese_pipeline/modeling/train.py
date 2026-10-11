@@ -26,8 +26,9 @@ def main() -> None:
 
     df = pd.read_parquet("data/synthetic/rides.parquet")
     train_df, test_df = temporal_split(df, test_frac=m["test_frac"])
-    x_tr, y_tr = make_xy(train_df, m["target"])
-    x_te, y_te = make_xy(test_df, m["target"])
+    fe_cfg = p.get("feature_eng")
+    x_tr, y_tr = make_xy(train_df, m["target"], fe_cfg)
+    x_te, y_te = make_xy(test_df, m["target"], fe_cfg)
     x_te = x_te.reindex(columns=x_tr.columns, fill_value=0)  # alinha one-hot
 
     best = json.loads(Path("reports/metrics/best_params.json").read_text(encoding="utf-8"))

@@ -3,6 +3,27 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.19.0 — Engenharia de features climáticas no treino (porta do 05_6)
+
+### Adicionado
+- **Utilitários de features** (`modeling/feateng_granularidade.py`): porta da lógica
+  do notebook `05_6_FeatureEng_Individual_vs_Agrupado` — enriquecimento climático por
+  TEMPO (médias móveis 3h/6h/24h, `delta_3h`, `lag`/`diff` de 1 janela, razão
+  vento/temperatura) e codificação cíclica `sin/cos` de hora/dia/mês. Funções puras,
+  todas backward-looking (sem vazamento do futuro).
+- **Bloco `feature_eng` em `params.yaml`**: liga/desliga o enriquecimento e parametriza
+  horizontes, colunas climáticas e variáveis cíclicas (sem constantes mágicas no código).
+- **Runners de nuvem do treino** (`scripts/run_train_gce.ps1` e `.sh`): rodam
+  `optimize → train → explain` numa VM Compute Engine (`e2-standard-4`), puxando
+  `rides.parquet` via DVC e publicando `reports/` + `models/` em
+  `gs://doutorado-501917-synthetic/train_run/`; `n_trials`/`timeout_s` do Optuna
+  ajustáveis via override do `params.yaml`.
+
+### Alterado
+- **`modeling/dataset.make_xy`** passa a enriquecer as features (05_6) antes do one-hot,
+  controlado pelo bloco `feature_eng`; `train.py`, `optimize.py` e `explain.py` repassam
+  essa configuração — mantendo a MESMA base de dados (`rides.parquet`).
+
 ## v0.18.0 — Classificação de corridas sob evento de demanda (Alvo A)
 
 ### Adicionado
