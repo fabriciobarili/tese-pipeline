@@ -3,6 +3,110 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.23.1 — Resumo e Abstract do artigo
+
+### Alterado
+- `docs/artigo/sbbd-2026-draft.md`: redigidos o **Resumo** e o **Abstract** (espelhados;
+  problema → lacuna → proposta → achado), fechando a última seção pendente do rascunho.
+
+## v0.23.0 — Figuras dos modelos pareados + figuras no artigo
+
+### Adicionado
+- `figuras.curvas_roc_pr` cobre o caso **binário** (curva única da classe positiva), além do
+  One-vs-Rest multiclasse.
+- **`narrador/treina_pareados`** exporta o conjunto de diagnósticos para CADA modelo pareado
+  (clima/atraso) — matriz de confusão, peso das variáveis, desempenho, distribuição e ROC/PR —
+  em `reports/narrador/figuras_clima/` e `figuras_atraso/`.
+
+### Alterado
+- `docs/artigo/sbbd-2026-draft.md`: a Seção 5.2 passa a **embutir** a matriz de confusão
+  (Figura 2) e o peso das variáveis (Figura 3) do classificador de eventos; as figuras da
+  validação causal foram renumeradas para 4 e 5.
+
+## v0.22.0 — Figuras de diagnóstico do treinamento
+
+### Adicionado
+- **`modeling/figuras.py`**: exporta um conjunto de figuras para embasar a pesquisa —
+  (1) **matriz de confusão** entre as classes (normalizada por linha, com contagens);
+  (2) **peso de cada variável** (|SHAP| médio, global e por classe de evento);
+  (3) gráficos de apoio — **desempenho por classe** (precisão/recall/F1), **distribuição das
+  classes** (desbalanceamento) e **curvas ROC e Precision–Recall** (One-vs-Rest).
+  Paleta Okabe–Ito (à prova de daltonismo); matiz sequencial único na matriz de confusão.
+- **`modeling/event_classifier`** passa a exportar essas figuras a cada treino, em
+  `reports/event_analysis/figuras/`.
+
+### Corrigido
+- Lint pendente no `event_classifier` (linhas longas, `zip` sem `strict`, statement com `;`).
+
+## v0.21.0 — Validação causal via SHAP (recuperação do gerador)
+
+### Adicionado
+- **`modeling/validacao_causal.py`**: verifica se o classificador de eventos *recupera* a
+  estrutura que o gerador sintético injetou. Quatro peças: ranking de importância SHAP por
+  classe; *dependence plot* do driver espacial (`dist_to_airport_km`); **teste de intervenção**
+  (relocar radialmente a origem para longe do SBPA, recomputando lat/lng/distância, e medir a
+  queda de P(evento)); e um *score de concordância* contra expectativas pré-registradas. Saídas
+  em `reports/causal_validation/` (JSONs + figuras).
+- Resultado da amostra de validação: `dist_to_airport_km` é o SHAP de topo nas duas classes de
+  evento; a intervenção derruba P(evento) com Spearman de −0,99 (voo) e −0,90 (clima) — o modelo
+  recuperou o ancoramento espacial, não um atalho.
+
+### Alterado
+- `docs/artigo/sbbd-2026-draft.md`: **Seção 5.3** redigida com esses resultados + Figuras 2 e 3.
+
+### Dependências
+- `scipy` declarado explicitamente (antes, transitivo via scikit-learn/shap).
+
+## v0.20.1 — Artigo: pipeline de ponta a ponta com predição conversacional
+
+### Alterado
+- `docs/artigo/sbbd-2026-draft.md`: a esteira descrita no artigo agora fecha o laço completo —
+  da coleta/fabricação do dado à **predição conversacional** devolvida ao motorista. Inclui o
+  estágio conversacional na Figura 1, a nova Seção 3.8 (modelos pareados + prior prospectivo +
+  ficha SHAP + narração em linguagem natural, sem *train/serve skew*), uma 4ª contribuição na
+  Introdução, e redige as Seções 5.4 (o que o motorista aprende) e 6 (conclusão).
+
+## v0.20.0 — Narrador conversacional de demanda (motorista × modelos)
+
+### Adicionado
+- **Pacote `narrador`** (`src/tese_pipeline/narrador/`) — o ambiente de conversa que fecha a
+  pipeline de ponta a ponta, respondendo ao motorista *\"vale a pena ir ao Salgado Filho às X?\"*.
+  Porta de `03_ANALISE/05_5_Narrador_Natural` + a produção do `05_6`, sobre a base do pacote.
+  - `features.py` — construção de features **compartilhada** entre treino e inferência (elimina
+    *train/serve skew*): clima físico, codificação cíclica, prior prospectivo de atraso
+    (climatologia + reputação por `dia_semana × hora`).
+  - `treina_pareados.py` — treina e exporta os **dois modelos binários pareados** (clima/atraso)
+    + `climatologia_atraso_sbpa.csv` + `reputacao_slot_sbpa.csv` (eventos de `driver_trips`,
+    clima de `meteo.parquet`, voos de `flights_anac.parquet`).
+  - `narrador.py` — classe `Narrador`: monta features em UTC, roda as duas dimensões, explica
+    via **SHAP**, agrega padrão histórico de voos/reputação, pondera o **esforço** do motorista,
+    varre +2h e **narra em linguagem natural com a API da Claude** (API pública por padrão;
+    suporta gateway via `base_url`/`auth_token`).
+- **Notebooks** `Work/06_modelos_pareados_demanda.ipynb` (treino dos pareados) e
+  `Work/07_narrador_natural.ipynb` (a conversa com o motorista).
+- Dependências `duckdb` e `anthropic`.
+
+## v0.19.0 — Engenharia de features climáticas no treino (porta do 05_6)
+
+### Adicionado
+- **Utilitários de features** (`modeling/feateng_granularidade.py`): porta da lógica
+  do notebook `05_6_FeatureEng_Individual_vs_Agrupado` — enriquecimento climático por
+  TEMPO (médias móveis 3h/6h/24h, `delta_3h`, `lag`/`diff` de 1 janela, razão
+  vento/temperatura) e codificação cíclica `sin/cos` de hora/dia/mês. Funções puras,
+  todas backward-looking (sem vazamento do futuro).
+- **Bloco `feature_eng` em `params.yaml`**: liga/desliga o enriquecimento e parametriza
+  horizontes, colunas climáticas e variáveis cíclicas (sem constantes mágicas no código).
+- **Runners de nuvem do treino** (`scripts/run_train_gce.ps1` e `.sh`): rodam
+  `optimize → train → explain` numa VM Compute Engine (`e2-standard-4`), puxando
+  `rides.parquet` via DVC e publicando `reports/` + `models/` em
+  `gs://doutorado-501917-synthetic/train_run/`; `n_trials`/`timeout_s` do Optuna
+  ajustáveis via override do `params.yaml`.
+
+### Alterado
+- **`modeling/dataset.make_xy`** passa a enriquecer as features (05_6) antes do one-hot,
+  controlado pelo bloco `feature_eng`; `train.py`, `optimize.py` e `explain.py` repassam
+  essa configuração — mantendo a MESMA base de dados (`rides.parquet`).
+
 ## v0.18.0 — Classificação de corridas sob evento de demanda (Alvo A)
 
 ### Adicionado

@@ -1,0 +1,28 @@
+{
+  "voo_atrasado": {
+    "top5_shap": [
+      "dist_to_airport_km",
+      "month",
+      "h3_distance_to_call",
+      "hour",
+      "weekday"
+    ],
+    "dist_to_airport_km_e_top1": true,
+    "dist_to_airport_km_rank": 1,
+    "frac_top5_esperados": 0.8,
+    "intervencao_spearman": -0.9868
+  },
+  "estresse_termico": {
+    "top5_shap": [
+      "dist_to_airport_km",
+      "month",
+      "origin_lat",
+      "h3_distance_to_call",
+      "hour"
+    ],
+    "dist_to_airport_km_e_top1": true,
+    "dist_to_airport_km_rank": 1,
+    "frac_top5_esperados": 0.6,
+    "intervencao_spearman": -0.9033
+  }
+}
