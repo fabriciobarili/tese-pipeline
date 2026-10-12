@@ -10,12 +10,35 @@
 
 ## Resumo
 
-_(a redigir ao final, espelhando o Abstract — quatro movimentos: problema → lacuna →
-proposta → achado. Ver `references/estrutura-artigo.md`.)_
+No trabalho por aplicativos de *ride-hailing*, a desigualdade entre plataforma e motorista é,
+antes de tudo, uma assimetria de conhecimento: a empresa calcula a cidade no agregado, enquanto o
+motorista decide por fragmentos. Falta ao trabalhador o dado — operadoras não divulgam corridas
+desagregadas — e, com ele, qualquer inteligência própria. Propomos uma pipeline de Ciência de
+Dados, versionada e auditável de ponta a ponta, que ergue essa inteligência sobre a telemetria
+**contribuída pelo próprio motorista** — latitude, longitude, instante e um booleano de passageiro
+a bordo —, da coleta e da indexação geoespacial H3 à previsão de corridas com um modelo explicável
+(LightGBM com valores SHAP) e à devolução do conhecimento ao motorista em uma camada
+conversacional. Sobre uma síntese condicionada a eventos observáveis — atrasos de voo e estresse
+térmico —, a validação causal mostra que o modelo recupera a estrutura injetada: a distância ao
+aeroporto domina a importância e uma intervenção espacial derruba a probabilidade predita do evento
+(correlação de Spearman de −0,99 e −0,90). O trabalho não resolve a assimetria; demonstra a
+viabilidade técnica de uma proposta de **autonomia informacional do trabalhador**.
 
 ## Abstract
 
-_(to be written last, mirroring the Resumo.)_
+In app-mediated *ride-hailing*, the inequality between platform and driver is first of all an
+asymmetry of knowledge: the company computes the city in aggregate while the driver decides from
+fragments. The worker lacks the data — operators do not release disaggregated trips — and, with it,
+any intelligence of their own. We propose an end-to-end, versioned and auditable Data Science
+pipeline that builds such intelligence on telemetry **contributed by the drivers themselves** —
+latitude, longitude, timestamp and a passenger-aboard boolean —, from collection and H3 geospatial
+indexing to ride-demand prediction with an explainable model (LightGBM with SHAP values) and to
+returning that knowledge to the driver through a conversational layer. Over a synthesis conditioned
+on observable events — flight delays and thermal stress —, a causal validation shows that the model
+recovers the injected structure: distance to the airport dominates importance, and a spatial
+intervention collapses the predicted event probability (Spearman of −0.99 and −0.90). The work does
+not solve the asymmetry; it demonstrates the technical viability of a proposal for the **worker's
+informational autonomy**.
 
 **Palavras-chave:** ciência de dados, previsão de demanda, ride-hailing, dados contribuídos,
 worker data science, autonomia informacional, LightGBM, SHAP, indexação H3.

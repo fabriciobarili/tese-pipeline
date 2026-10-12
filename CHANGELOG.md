@@ -3,6 +3,12 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.23.1 — Resumo e Abstract do artigo
+
+### Alterado
+- `docs/artigo/sbbd-2026-draft.md`: redigidos o **Resumo** e o **Abstract** (espelhados;
+  problema → lacuna → proposta → achado), fechando a última seção pendente do rascunho.
+
 ## v0.23.0 — Figuras dos modelos pareados + figuras no artigo
 
 ### Adicionado
