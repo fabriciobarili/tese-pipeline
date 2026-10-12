@@ -139,7 +139,8 @@ def evaluate(clf, X_test, y_test, classes) -> dict:
         "f1_macro": round(f1_score(y_test, y_pred, average="macro"), 4),
         "mcc": round(matthews_corrcoef(y_test, y_pred), 4),
         "roc_auc_ovr_weighted": round(roc, 4),
-        "per_class": {c: {k: round(rep[c][k], 4) for k in ("precision", "recall", "f1-score", "support")}
+        "per_class": {c: {k: round(rep[c][k], 4)
+                          for k in ("precision", "recall", "f1-score", "support")}
                       for c in classes},
         "confusion_matrix": {"labels": classes, "matrix": cm},
     }
@@ -174,14 +175,15 @@ def shap_importances(clf, X_sample, features, classes, out_dir: Path, top: int) 
     if len(sv_list) == len(model_classes):
         for k, c in enumerate(model_classes):
             imp = np.abs(sv_list[k]).mean(axis=0).ravel()
-            per_class[c] = dict(sorted(zip(features, imp), key=lambda x: -x[1]))
+            per_class[c] = dict(sorted(zip(features, imp, strict=False), key=lambda x: -x[1]))
 
     try:
         plt.figure()
         plot_arg = sv_list if len(sv_list) > 1 else sv_list[0]
         shap.summary_plot(plot_arg, X_sample, feature_names=features, show=False,
                           max_display=top, plot_type="bar")
-        plt.tight_layout(); plt.savefig(out_dir / "shap_summary.png", dpi=140, bbox_inches="tight")
+        plt.tight_layout()
+        plt.savefig(out_dir / "shap_summary.png", dpi=140, bbox_inches="tight")
         plt.close()
     except Exception as e:  # noqa: BLE001
         LOG.warning("summary_plot falhou (%s); seguindo com o ranking numérico", e)
@@ -277,7 +279,8 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # salva métricas e modelo ANTES do SHAP (etapa cara já concluída)
-    (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2, ensure_ascii=False), encoding="utf-8")
+    (out_dir / "metrics.json").write_text(
+        json.dumps(metrics, indent=2, ensure_ascii=False), encoding="utf-8")
     clf.booster_.save_model(str(out_dir / "lgbm_event.txt"))
     LOG.info("métricas e modelo salvos em %s", out_dir)
 
@@ -287,10 +290,18 @@ def main() -> None:
         X_shap = X_te.sample(n_shap, random_state=seed)
         shap_imp = shap_importances(clf, X_shap, features, classes, out_dir,
                                     int(cfg["explain"]["top_features"]))
-        (out_dir / "shap_importances.json").write_text(json.dumps(shap_imp, indent=2, ensure_ascii=False), encoding="utf-8")
+        (out_dir / "shap_importances.json").write_text(
+            json.dumps(shap_imp, indent=2, ensure_ascii=False), encoding="utf-8")
         (out_dir / "narration.md").write_text(narrate(metrics, shap_imp, classes), encoding="utf-8")
+        # Figuras de diagnóstico: matriz de confusão, peso das variáveis (global e por classe),
+        # desempenho por classe, distribuição e curvas ROC/PR.
+        from tese_pipeline.modeling import figuras
+        order = [list(clf.classes_).index(c) for c in classes]
+        proba_fig = clf.predict_proba(X_te)[:, order]
+        figuras.exportar_classificacao(y_te, proba_fig, classes, metrics, shap_imp,
+                                       out_dir / "figuras")
     except Exception as e:  # noqa: BLE001
-        LOG.warning("SHAP/narração falhou (%s); métricas e modelo já estão salvos", e)
+        LOG.warning("SHAP/narração/figuras falhou (%s); métricas e modelo já estão salvos", e)
 
     LOG.info("artefatos salvos em %s", out_dir)
     for c in classes:

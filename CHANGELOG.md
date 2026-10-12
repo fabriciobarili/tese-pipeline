@@ -3,6 +3,21 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.22.0 — Figuras de diagnóstico do treinamento
+
+### Adicionado
+- **`modeling/figuras.py`**: exporta um conjunto de figuras para embasar a pesquisa —
+  (1) **matriz de confusão** entre as classes (normalizada por linha, com contagens);
+  (2) **peso de cada variável** (|SHAP| médio, global e por classe de evento);
+  (3) gráficos de apoio — **desempenho por classe** (precisão/recall/F1), **distribuição das
+  classes** (desbalanceamento) e **curvas ROC e Precision–Recall** (One-vs-Rest).
+  Paleta Okabe–Ito (à prova de daltonismo); matiz sequencial único na matriz de confusão.
+- **`modeling/event_classifier`** passa a exportar essas figuras a cada treino, em
+  `reports/event_analysis/figuras/`.
+
+### Corrigido
+- Lint pendente no `event_classifier` (linhas longas, `zip` sem `strict`, statement com `;`).
+
 ## v0.21.0 — Validação causal via SHAP (recuperação do gerador)
 
 ### Adicionado
