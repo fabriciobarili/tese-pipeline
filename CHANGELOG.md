@@ -3,6 +3,26 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.20.0 — Narrador conversacional de demanda (motorista × modelos)
+
+### Adicionado
+- **Pacote `narrador`** (`src/tese_pipeline/narrador/`) — o ambiente de conversa que fecha a
+  pipeline de ponta a ponta, respondendo ao motorista *\"vale a pena ir ao Salgado Filho às X?\"*.
+  Porta de `03_ANALISE/05_5_Narrador_Natural` + a produção do `05_6`, sobre a base do pacote.
+  - `features.py` — construção de features **compartilhada** entre treino e inferência (elimina
+    *train/serve skew*): clima físico, codificação cíclica, prior prospectivo de atraso
+    (climatologia + reputação por `dia_semana × hora`).
+  - `treina_pareados.py` — treina e exporta os **dois modelos binários pareados** (clima/atraso)
+    + `climatologia_atraso_sbpa.csv` + `reputacao_slot_sbpa.csv` (eventos de `driver_trips`,
+    clima de `meteo.parquet`, voos de `flights_anac.parquet`).
+  - `narrador.py` — classe `Narrador`: monta features em UTC, roda as duas dimensões, explica
+    via **SHAP**, agrega padrão histórico de voos/reputação, pondera o **esforço** do motorista,
+    varre +2h e **narra em linguagem natural com a API da Claude** (API pública por padrão;
+    suporta gateway via `base_url`/`auth_token`).
+- **Notebooks** `Work/06_modelos_pareados_demanda.ipynb` (treino dos pareados) e
+  `Work/07_narrador_natural.ipynb` (a conversa com o motorista).
+- Dependências `duckdb` e `anthropic`.
+
 ## v0.19.0 — Engenharia de features climáticas no treino (porta do 05_6)
 
 ### Adicionado
