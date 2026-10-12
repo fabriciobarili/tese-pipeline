@@ -1,462 +1,549 @@
-# Uma Pipeline Reprodutível para Previsão de Demanda de Corridas por Aplicativo em Regiões Aeroportuárias: Síntese Condicionada a Voos e Meteorologia com Indexação H3, LightGBM e SHAP
+# Previsão de Demanda de Corridas por Aplicativo a partir de Dados Contribuídos pelo Motorista:
+# uma Proposta de Ciência de Dados para a Autonomia Informacional do Trabalhador
 
-> **Rascunho para submissão ao SBBD/CSBC 2026 — versão 1.0 (04/10/2026)**  
-> Autores: Fabricio Barili, [Orientador]  
-> Filiação: [Universidade]  
+> **Rascunho para submissão ao SBBD/CSBC — versão 0.5 (11/10/2026)**
+> Autores: Fabricio Barili, [Orientador]
+> Filiação: [Universidade]
+> Implementação documentada em `Work/`; moldura e estilo em `.claude/skills/escrita-artigo/`.
 
 ---
 
 ## Resumo
 
-A previsão de demanda de transporte por aplicativo (*ride-hailing*) em regiões aeroportuárias é relevante para o planejamento urbano e operacional, porém raramente viável com dados reais devido a restrições comerciais e de privacidade. Este trabalho propõe uma metodologia reprodutível e auditável para geração de dados sintéticos de corridas condicionados a dados reais de chegadas de voos e condições meteorológicas, com foco no Aeroporto Internacional Salgado Filho (SBPA), em Porto Alegre/RS. A pipeline integra dados abertos da OpenSky Network e da API Open-Meteo (ERA5), aplica indexação geoespacial hierárquica com H3 (Uber) nas resoluções 8 e 13 sobre 722 Unidades de Desenvolvimento Humano (UDHs) da Região Metropolitana de Porto Alegre e sobre 11,8 milhões de células da malha viária derivada do OpenStreetMap, e treina um modelo *gradient boosting* (LightGBM) com otimização de hiperparâmetros via Optuna e avaliação temporal sem vazamento. A explicabilidade é garantida por valores SHAP, que permitem verificar se o modelo recupera as relações causais injetadas no processo gerador — constituindo uma forma de validação de coerência interna da esteira. A pipeline é inteiramente versionada com DVC e código aberto, com armazenamento em Google Cloud Storage.
-
-**Palavras-chave:** ride-hailing, dados sintéticos, LightGBM, SHAP, H3, OpenStreetMap, reprodutibilidade, DVC.
-
----
+_(a redigir ao final, espelhando o Abstract — quatro movimentos: problema → lacuna →
+proposta → achado. Ver `references/estrutura-artigo.md`.)_
 
 ## Abstract
 
-Predicting ride-hailing demand near airports is relevant for urban and operational planning, yet rarely feasible with real data due to commercial and privacy constraints. This work proposes a reproducible and auditable methodology for generating synthetic ride datasets conditioned on real flight arrival records and meteorological data, focusing on Salgado Filho International Airport (SBPA) in Porto Alegre, Brazil. The pipeline integrates open data from the OpenSky Network and the Open-Meteo API (ERA5), applies hierarchical geospatial indexing with H3 (Uber) at resolutions 8 and 13 over 722 Human Development Units (UDHs) of the Porto Alegre Metropolitan Region and 11.8 million cells of the road network derived from OpenStreetMap, and trains a gradient boosting model (LightGBM) with Optuna hyperparameter optimization and temporal split evaluation without data leakage. Explainability is ensured through SHAP values, which verify that the model recovers the causal relationships injected during synthesis — constituting an internal consistency validation of the pipeline. The entire pipeline is versioned with DVC and open source, with data stored on Google Cloud Storage.
+_(to be written last, mirroring the Resumo.)_
 
-**Keywords:** ride-hailing, synthetic data, LightGBM, SHAP, H3, OpenStreetMap, reproducibility, DVC.
+**Palavras-chave:** ciência de dados, previsão de demanda, ride-hailing, dados contribuídos,
+worker data science, autonomia informacional, LightGBM, SHAP, indexação H3.
 
 ---
 
 ## 1. Introdução
 
-O trabalho por plataformas de *ride-hailing* opera em um ambiente marcado por assimetria de informação: a empresa acessa grandes volumes de dados históricos e em tempo real para organizar a demanda, enquanto o motorista decide com base em experiência, percepção da cidade e sinais emitidos pelo próprio sistema que controla suas oportunidades [MCDAID_2023; GROHMANN_2021]. Van Dijck, Poell e De Waal (2018) descrevem essa arquitetura como uma infraestrutura em que dados e algoritmos organizam relações sociais e distribuem possibilidades de ação — o que Abílio (2020) condensa na figura do trabalhador *just-in-time*: formalmente autônomo, mas materialmente dependente de decisões que não controla.
+No trabalho mediado por plataformas de *ride-hailing*, a desigualdade entre empresa e
+motorista raramente se esgota no plano econômico: ela é, antes de tudo, uma **assimetria de
+conhecimento**. A plataforma opera sobre o agregado — sabe quantos carros circulam, estima a
+elasticidade de cada bairro, antecipa picos e ajusta preços em tempo real —, enquanto o
+motorista decide a partir de fragmentos: o mapa que vê naquele instante, a memória das
+corridas de ontem e os sinais que o próprio sistema resolve emitir. Van Dijck, Poell e De Waal
+(2018) descrevem essa arquitetura como uma infraestrutura em que dados e algoritmos organizam
+relações sociais e distribuem possibilidades de ação; Abílio (2020) a condensa na figura do
+trabalhador *just-in-time*, formalmente autônomo e materialmente dependente de decisões que
+não controla. A tese que motiva este estudo resume o descompasso em uma imagem: a plataforma
+calcula a cidade, e o motorista persegue sinais da cidade calculada [BARILI_TESE]. A diferença
+de escala observacional é, no limite, uma diferença de poder [MCDAID_2023; MURAKAMI_WOOD_2019].
 
-Do ponto de vista da Computação Aplicada, essa assimetria pode ser traduzida como um problema de **inferência indireta**: o que se busca não é reconstruir o algoritmo proprietário da plataforma, mas estimar a probabilidade de que condições externas observáveis coincidam com maior ocorrência de corridas em uma área e janela temporal. Duas fontes abertas são particularmente relevantes para isso no contexto aeroportuário — chegadas de voos e dados meteorológicos —, pois concentram boa parte do sinal que influencia a demanda: um voo que aterrissa injeta passageiros no terminal; chuva e horário de pico modulam a duração e o volume das corridas subsequentes.
+Essa assimetria não é um acidente operacional; é sustentada pela opacidade do sistema.
+Grohmann et al. (2021) cunham o conceito de *platform scam* para nomear não as fraudes
+pontuais, mas as formas estruturais de incerteza embutidas no gerenciamento algorítmico — o
+motorista não acessa os critérios de precificação, desconhece a lógica que distribui as
+chamadas e não tem como verificar se a promessa de ganho se cumpriu com justiça. Phatak (2022)
+agrega um complicador técnico: a arquitetura de microsserviços da plataforma recompõe-se de
+forma contínua, em ritmo que supera a capacidade de observação empírica de quem está ao
+volante. A caixa-preta, portanto, não é uma falha a corrigir — é uma propriedade do projeto.
 
-Uma barreira central a qualquer modelagem nesse domínio é a **indisponibilidade de dados reais** de corridas. Operadoras como Uber e 99 não divulgam registros desagregados por origem-destino [UBER_MOVEMENT], e o acesso por acordos com órgãos públicos é restrito a poucas cidades. O Aeroporto Internacional Salgado Filho (SBPA), em Porto Alegre — principal *hub* da Região Sul do Brasil, com cerca de quatro milhões de passageiros anuais [INFRAERO_2023] — não é exceção. Conforme Holzinger et al. (2023) e Kobayashi e Alam (2024) discutem, dados sintéticos constituem, nesses casos, um ambiente experimental legítimo para testar e depurar componentes de uma pipeline antes da validação com dados observados.
+Diante desse quadro, a Ciência de Dados oferece uma resposta, sob uma condição: só é útil ao
+trabalhador aquilo que produz **informação interpretável**, e não mais uma caixa-preta a
+competir com a da plataforma. Em vez de tentar reconstruir o algoritmo proprietário, propomos
+erguer uma **inteligência externa** sobre sinais que o próprio motorista observa e registra. A
+virada está na origem do dado: não um registro corporativo inacessível, tampouco uma simulação,
+mas a telemetria **contribuída pelos próprios motoristas**. Cada evento reúne quatro campos —
+latitude, longitude, instante e um valor booleano que indica se há passageiro a bordo —, e é
+justamente a transição desse booleano, de livre para ocupado e de volta, que converte uma
+trajetória de pontos no mapa em corrida identificável. A dimensão geoespacial é tratada pelo
+sistema de indexação hierárquica H3 [UBER_H3], que representa posições, zonas e distâncias em
+células hexagonais compatíveis com múltiplas fontes de dados urbanos. Materializa-se, aqui, a
+agenda de *worker data science* que Woodcock e Ruiner (2026) delineiam: dados e modelos deixam
+de ser monopólio gerencial e passam a recurso de quem trabalha. É preciso, contudo, demarcar o
+estatuto da proposta. A previsão de demanda não é oferecida como solução para a assimetria, mas
+como prova de conceito de um caminho de **autonomia informacional do trabalhador**.
 
-A abordagem proposta neste trabalho vai além de suprir a ausência de dados reais. Ao tornar o processo gerador **explícito e parametrizado**, cria-se um mecanismo de validação interna: o modelo preditivo pode ser examinado para verificar se recupera as relações causais injetadas na síntese. Valores SHAP [LUNDBERG_2017] fornecem essa verificação, cumprindo duas funções simultâneas — técnica, ao detectar incoerências e dependências indesejadas, e metodológica, ao mostrar que a esteira aprende o que foi planejado ensinar. Barredo Arrieta et al. (2020) argumentam que a qualidade de um sistema de IA não pode ser medida apenas por acurácia, mas também por rastreabilidade, interpretabilidade e adequação à decisão humana; este trabalho adota esse princípio como requisito de projeto.
+Resta uma barreira concreta, e ela é de dados. Operadoras como Uber e 99 não divulgam registros
+desagregados de corridas por origem e destino [UBER_MOVEMENT], e acordos com o poder público,
+quando existem, alcançam poucas cidades; o Aeroporto Internacional Salgado Filho (SBPA), em
+Porto Alegre — recorte inicial deste trabalho e polo de demanda concentrada —, não escapa à
+regra. A coleta contribuída ataca o problema na origem, ao produzir o dado exatamente onde ele
+falta. Enquanto
+esse volume ainda cresce, a síntese condicionada a fontes abertas — chegadas de voos e
+meteorologia histórica — cumpre a função de partida a frio: um ambiente controlado para depurar
+a esteira e, principalmente, para verificar se o modelo recupera relações causais já conhecidas
+[HOLZINGER_2023; KOBAYASHI_2024]. É esta a hipótese que o trabalho se propõe a validar —
+elementos observáveis, registrados pelo próprio motorista, bastam para compor um algoritmo
+preditivo e explicável capaz de sustentar, no plano técnico, uma proposta de autonomia
+informacional.
 
-Uma segunda contribuição é a **representação geoespacial enriquecida** por meio do sistema de indexação hierárquica H3 (Uber) [BRODSKY_2018]. A origem e o destino de cada corrida sintética são representados como células H3 em múltiplas resoluções, permitindo análise em diferentes granularidades — desde o nível de quadra (resolução 10, ~0,015 km²) até o nível de zona de demanda (resolução 8, ~0,74 km²). Esse enriquecimento geoespacial é calibrado com dados reais da malha viária do OpenStreetMap e das 722 UDHs (Unidades de Desenvolvimento Humano) do Censo 2010 para a RM Porto Alegre — possibilitando futuras análises de equidade e de distribuição espacial da demanda.
+Deste movimento decorrem três **contribuições**:
 
-Este trabalho faz as seguintes **contribuições**:
+1. uma **proposta de pipeline de Ciência de Dados**, versionada e auditável de ponta a ponta
+   com DVC [KUPRIEIEV_2021], que converte telemetria contribuída por motoristas — da coleta e
+   normalização à indexação geoespacial H3 [UBER_H3] e à engenharia de *features* — em previsão
+   de corridas;
+2. um **modelo explicável** (LightGBM [KE_2017] com valores SHAP [LUNDBERG_2017]) que não se
+   limita a prever, mas devolve ao motorista os fatores observáveis que governam a demanda;
+3. um **protocolo de validação causal** apoiado em síntese condicionada, que verifica se o
+   modelo recupera as relações injetadas no processo gerador e, assim, demonstra a viabilidade
+   técnica da proposta;
+4. uma **camada de predição conversacional** que fecha o laço de ponta a ponta — o motorista
+   interroga o que foi aprendido sobre um horário futuro e recebe, ancorada em SHAP e em
+   linguagem natural, uma recomendação interpretável de ir ou não ao polo de demanda.
 
-1. Uma **pipeline reprodutível de ponta a ponta** que integra dados abertos de voos (OpenSky Network [SCHAFER_2014]) e meteorologia (Open-Meteo ERA5 [ZIPPENFENIG_2023]), gera corridas sintéticas com parâmetros declarativos e auditáveis, e treina um modelo LightGBM [KE_2017] com otimização via Optuna [AKIBA_2019] — inteiramente versionada com DVC [KUPRIEIEV_2021] e armazenada em Google Cloud Storage.
-
-2. Um **protocolo de validação causal via SHAP**: demonstramos que o modelo recupera as relações injetadas no processo gerador (efeito da precipitação e de horários de pico), validando a coerência interna da esteira.
-
-3. Uma **base de indexação geoespacial H3** para a RM Porto Alegre: 722 UDHs do Censo 2010 e 11,8 milhões de células H3 na resolução 13 cobrindo a malha viária navegável derivada do OpenStreetMap, disponibilizados como artefatos reutilizáveis para pesquisa em mobilidade urbana.
-
-4. Um **caso de aplicação** para o SBPA que pode ser generalizado a outros aeroportos com cobertura da OpenSky Network.
-
-O restante do artigo está organizado da seguinte forma: a Seção 2 discute trabalhos relacionados; a Seção 3 descreve a metodologia; a Seção 4 apresenta a configuração experimental; a Seção 5 analisa os resultados; e a Seção 6 conclui o artigo.
+O restante do artigo organiza-se como segue. A Seção 2 situa o trabalho na literatura; a Seção
+3 detalha a metodologia, estágio a estágio, da coleta à conversa com o motorista; a Seção 4 descreve a
+configuração experimental; a Seção 5 discute os resultados e o que deles o motorista pode
+extrair; e a Seção 6 conclui.
 
 ---
 
 ## 2. Trabalhos Relacionados
 
-### 2.1 Previsão de Demanda de Transporte por Aplicativo
+### 2.1 Previsão de demanda em mobilidade urbana
 
-A previsão de demanda de *ride-hailing* é um problema amplamente estudado. Abordagens baseadas em séries temporais [YAO_2018] e redes neurais profundas, como LSTM e modelos atencionais [DIDI_2018], têm dominado a literatura recente, frequentemente utilizando dados proprietários de operadoras. Métodos baseados em *gradient boosting* — XGBoost, LightGBM — têm mostrado desempenho competitivo com custo computacional menor [CHEN_2016; KE_2017], especialmente quando *features* temporais e contextuais são bem engenheiradas [ZHENG_2020].
+Prever onde e quando a demanda por transporte se forma é um problema antigo da Ciência de
+Dados aplicada à mobilidade, e sua trajetória metodológica acompanha a da própria disciplina:
+dos modelos clássicos de séries temporais às abordagens de aprendizado de máquina [YAO_2018]
+e, mais recentemente, às redes neurais profundas — LSTMs e arquiteturas atencionais
+[DIDI_2018] — que dominam a literatura sempre que há dados proprietários em larga escala.
+Modelos de *gradient boosting*, como XGBoost [CHEN_2016] e LightGBM [KE_2017], ocupam um lugar
+particular nesse espectro: entregam desempenho competitivo a um custo computacional muito
+menor, sobretudo quando as *features* temporais e contextuais são bem construídas [ZHENG_2020].
+No recorte aeroportuário, Flores e Rayle (2018) mostraram que atrasos elevados nas chegadas
+elevam a demanda por táxi de maneira mensurável [FLORES_2018]; Tan et al. (2016) e Yang et al.
+(2020) examinaram os efeitos de clima e de horário em Cingapura e Nova York. Para o Brasil, a
+literatura sobre previsão de *rideshare* aeroportuário é escassa — lacuna que este trabalho
+ajuda a ocupar.
 
-Em contextos aeroportuários, Flores e Rayle (2018) investigaram a influência de atrasos de voos e clima na demanda de táxis em Chicago, encontrando que chegadas com atraso superior a 30 min elevam a demanda em até 18%. Estudos semelhantes foram realizados para Cingapura [TAN_2016] e Nova York [YANG_2020]. Para o Brasil, a literatura sobre *ride-hailing* aeroportuário é ainda incipiente, o que reforça a relevância do caso SBPA.
+### 2.2 Indexação geoespacial hierárquica
 
-### 2.2 Indexação Geoespacial Hierárquica
+Representar o espaço urbano de forma computacionalmente tratável é condição para qualquer
+modelo que combine origem, destino e contexto. O sistema H3 [UBER_H3] resolve o problema com
+uma grade hexagonal hierárquica: cada célula tem vizinhança uniforme — ao contrário das grades
+quadradas, em que vizinhos diagonais e ortogonais distam de forma desigual — e pode ser
+refinada ou agregada entre resoluções sem perder o alinhamento. Essa propriedade importa aqui
+por duas razões: permite indexar a malha viária, as zonas de demanda e as posições dos
+motoristas num mesmo referencial, e torna barato calcular distâncias aproximadas por contagem
+de saltos entre células.
 
-O sistema H3, desenvolvido pela Uber e publicado como código aberto [BRODSKY_2018], implementa uma grade hexagonal hierárquica sobre a superfície terrestre com 16 resoluções de precisão. Sua adoção cresceu rapidamente em aplicações de mobilidade urbana por permitir operações eficientes de vizinhança (`grid_disk`), trajetória (`grid_path_cells`) e agregação multi-escala (`cell_to_parent`). Diferentemente de grades retangulares, os hexágonos minimizam distorções de vizinhança — relevante para análises de origem-destino.
+### 2.3 Simulação baseada em agentes e dados sintéticos
 
-Em ride-hailing, H3 tem sido usado para modelar zonas de oferta e demanda [BRODSKY_2018], agrupar origens e destinos para previsão de demanda [ZHENG_2020], e indexar redes de transporte público [LI_2021]. Este trabalho estende esse uso para incluir o enriquecimento geoespacial com UDHs (dados socioeconômicos) e malha viária OSM.
+Quando o dado real falta, duas tradições se oferecem. A primeira é a geração de dados
+sintéticos como ambiente experimental legítimo, defensável desde que o processo gerador seja
+explícito e auditável [HOLZINGER_2023; KOBAYASHI_2024]. A segunda é a simulação baseada em
+agentes, que não produz amostras isoladas, mas deixa *emergir* padrões espaço-temporais do
+comportamento de muitos indivíduos interagindo com o ambiente. Bonnetain et al. (2021) e Basu
+et al. (2020) calibram simulações de mobilidade com parâmetros empíricos; Yuan et al. (2022)
+exploram GANs para trajetórias urbanas realistas. A opção adotada aqui combina as duas vias —
+motoristas-agentes circulam sobre a malha viária real, e a demanda que encontram é condicionada
+a eventos observáveis externos. Preserva-se, assim, a auditabilidade do gerador e, ao mesmo
+tempo, obtém-se a dinâmica emergente (concentração em torno de eventos, ritmo de turno, retorno
+para casa) que um gerador corrida-a-corrida não captura.
 
-### 2.3 OpenStreetMap em Pesquisa de Mobilidade
+### 2.4 Dados contribuídos e *worker data science*
 
-Dados do OpenStreetMap (OSM) têm sido amplamente usados como substituto gratuito de dados viários proprietários [HAKLAY_2010]. Para o Brasil, o projeto Geofabrik disponibiliza extatos regionais atualizados diariamente. A integração OSM + H3 para análise de redes viárias permanece pouco explorada — geralmente OSM é usado com ferramentas de roteamento (OSRM, Valhalla) e não com indexação hexagonal. Neste trabalho, cada segmento viário navegável é mapeado para as células H3 que ele atravessa, criando uma estrutura de busca por ponto (`h3_r13 ∈ vias_set`) eficiente e reutilizável.
+Há uma diferença de princípio entre extrair dados do trabalhador e os dados serem *contribuídos*
+por ele. Van Dijck, Poell e De Waal (2018) descrevem a plataforma como infraestrutura que
+captura e organiza esses dados em favor de quem a controla; Grohmann et al. (2021) mostram o
+custo dessa captura para quem trabalha. Woodcock e Ruiner (2026) propõem a inversão: dados e
+modelos como recurso do próprio trabalhador — uma *worker data science*. É nessa tradição que
+este trabalho se inscreve, e dela deriva a escolha do dado-fonte: não o registro corporativo,
+mas a telemetria que o motorista produz e, em princípio, controla.
 
-### 2.4 Dados Sintéticos para Mobilidade Urbana
+### 2.5 IA explicável em sistemas de trabalho por plataforma
 
-A geração de dados sintéticos de mobilidade tem ganhado relevância como alternativa à indisponibilidade de dados reais. Bonnetain et al. (2021) propuseram um gerador baseado em modelos de atividade para avaliar algoritmos de *pooling*. Basu et al. (2020) utilizaram dados de pesquisa domiciliar para calibrar modelos de simulação. Abordagens baseadas em GANs foram exploradas por Yuan et al. (2022) para gerar trajetórias sintéticas realistas. A diferença central da nossa abordagem é o condicionamento a dados reais externos (voos + meteorologia) e a auditabilidade do processo gerador via parâmetros declarativos — que permitem validação causal, não apenas estatística.
-
-### 2.5 Explicabilidade em Modelos de Transporte
-
-Valores SHAP [LUNDBERG_2017; LUNDBERG_2020] tornaram-se o padrão de facto para explicabilidade de modelos baseados em árvores. Em transporte, Zhang et al. (2022) usaram SHAP para identificar fatores de risco em acidentes urbanos; Li et al. (2021) aplicaram SHAP à previsão de demanda de ônibus. A contribuição inédita deste trabalho é usar SHAP não apenas como ferramenta de interpretação, mas como **mecanismo de validação**: se o modelo recupera via SHAP exatamente as relações injetadas no gerador sintético, a esteira está internamente consistente.
-
----
+Valores SHAP [LUNDBERG_2017; LUNDBERG_2020] consolidaram-se como padrão para explicar modelos
+baseados em árvores, e já foram aplicados à mobilidade — Li et al. (2021) e Zhang et al. (2022)
+os usaram para interpretar demanda de ônibus e risco de acidentes. A contribuição deste trabalho
+não está na técnica, mas no seu endereçamento: a explicação não serve para auditar um modelo
+corporativo, mas para devolver ao motorista os fatores observáveis que governam a demanda.
+Barredo Arrieta et al. (2020) sustentam teoricamente essa escolha ao argumentar que a
+explicabilidade deve ser medida pela adequação ao público e à decisão que apoia — e a decisão,
+aqui, é a de quem precisa saber por que vale a pena estar em certo lugar a certa hora.
 
 ## 3. Metodologia
 
-A Figura 1 ilustra a arquitetura geral da pipeline. Os estágios são orquestrados pelo DVC [KUPRIEIEV_2021], garantindo reprodutibilidade por hash de dados e rastreabilidade de parâmetros. Todos os dados são armazenados no Google Cloud Storage (projeto `doutorado-501917`, região `southamerica-east1`).
+A proposta materializa-se em uma esteira de Ciência de Dados que vai do sinal observável ao
+dado contribuído pelo motorista. A Figura 1 apresenta sua arquitetura. O que a distingue de um
+gerador de demanda convencional é a combinação de dois compromissos: a demanda é condicionada a
+**eventos públicos verificáveis** — voos atrasados e estresse térmico — e o dado é produzido por
+**motoristas-agentes** que circulam sobre a malha viária real, no esquema `(latitude, longitude,
+datetime, com_passageiro)` que a própria proposta elege como fonte.
 
 ```
-┌──────────────────┐    ┌────────────────────────┐   ┌────────────────────┐
-│  Open-Meteo      │    │  OpenSky Network        │   │  OpenStreetMap     │
-│  (ERA5 histórico)│    │  (chegadas SBPA)        │   │  (RM Porto Alegre) │
-└────────┬─────────┘    └──────────┬──────────────┘   └────────┬───────────┘
-         │                         │                            │
-         ▼                         ▼                            ▼
-┌────────────────────────────────────────────┐    ┌────────────────────────┐
-│         Feature Engineering (Estágio 3)    │    │  Indexação H3 (ext.)   │
-│  join por (aeroporto, hora UTC)            │    │  722 UDHs res 8/10/13  │
-│  H3 res 8 (aeroporto) + features temporais │    │  Malha viária res 13   │
-└────────────────────┬───────────────────────┘    └────────────────────────┘
-                     │
-                     ▼
-┌────────────────────────────────────────────┐
-│  Processo Gerador Sintético (Estágio 4)    │
-│  P(corridas | voo, meteo, H3) → rides.parquet│
-└────────────────────┬───────────────────────┘
-                     │
-           ┌─────────┴──────────┐
-           ▼                    ▼
-┌──────────────────┐  ┌──────────────────────┐
-│  LightGBM +      │  │  SHAP Explainer      │
-│  Optuna (Est. 6) │  │  (validação causal)  │
-└──────────────────┘  └──────────────────────┘
-                              │
-                    ┌─────────┴──────────┐
-                    ▼                    ▼
-           ┌─────────────┐    ┌──────────────────┐
-           │  Narração   │    │  Google Cloud    │
-           │  (Est. 7)   │    │  Storage (DVC)   │
-           └─────────────┘    └──────────────────┘
+┌───────────────────┐ ┌───────────────────┐ ┌───────────────────┐ ┌──────────────┐
+│ OSM vias → H3     │ │ ANAC VRA 2025     │ │ UTCI conforto     │ │ Células SBPA │
+│ (malha trafegável)│ │ (voos atrasados)  │ │ térmico (clima)   │ │ (hotspot)    │
+└─────────┬─────────┘ └─────────┬─────────┘ └─────────┬─────────┘ └──────┬───────┘
+          │                     │                     │                   │
+          │                     ▼                     ▼                   │
+          │          ┌────────────────────────────────────────┐          │
+          │          │ Modelo de eventos de demanda            │◄─────────┘
+          │          │ (ponderado por passageiros/severidade)  │
+          │          └───────────────────┬────────────────────┘
+          ▼                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│ Simulação baseada em agentes — 30.000 motoristas na grade H3   │
+│ jornada, turnos, retorno para casa, reputação, encadeamento    │
+└───────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌──────────────────────────────────────────────────────────────┐
+│ Dado contribuído: latitude, longitude, datetime, com_passageiro│
+│ + atributos de corrida (origem/destino H3, distância, tempo)   │
+└───────────────────────────────┬────────────────────────────────┘
+                                ▼
+                   ┌───────────────────────────┐
+                   │ LightGBM + SHAP (Seção 5)  │
+                   └─────────────┬─────────────┘
+                                 ▼
+          ┌────────────────────────────────────────────┐
+          │ Predição conversacional (Seção 3.8)         │
+          │ motorista pergunta → modelos pareados +     │
+          │ SHAP → recomendação em linguagem natural    │
+          └────────────────────────────────────────────┘
 ```
-*Figura 1: Arquitetura da pipeline. Fontes de dados abertas em cinza; contribuições deste trabalho em branco.*
+*Figura 1: Arquitetura da esteira. Fontes observáveis condicionam um modelo de eventos de
+demanda; motoristas-agentes produzem, sobre a malha viária real, o dado contribuído que alimenta
+a modelagem explicável — cujo conhecimento, enfim, retorna ao motorista como predição
+conversacional.*
 
-### 3.1 Ingestão de Dados
+### 3.1 Fontes de dados observáveis
 
-**Meteorologia.** Utilizamos a Historical Weather API da Open-Meteo [ZIPPENFENIG_2023], que disponibiliza reanálise ERA5 com resolução horária. As variáveis coletadas para as coordenadas do SBPA (latitude −29,9944°, longitude −51,1713°) são: temperatura a 2 m (°C), precipitação acumulada por hora (mm), velocidade do vento a 10 m (km/h), código WMO de tempo e umidade relativa. O módulo implementa *retry* com *backoff* exponencial e registra percentual de valores faltantes por variável.
+Quatro fontes, todas públicas ou derivadas de dados públicos, sustentam a simulação.
 
-**Voos.** Utilizamos a API de histórico da OpenSky Network [SCHAFER_2014] via endpoint `/api/flights/arrival?airport=SBPA`, com autenticação OAuth2 *client credentials*. Requisições cobrem janelas de até 7 dias (`chunk_days=7`) e as credenciais são mantidas exclusivamente em variáveis de ambiente, nunca versionadas. O campo central é `firstSeen` (epoch UTC), usado para alinhar ao horário meteorológico. Voos são deduplicados por `(icao24, firstSeen)`.
+**Malha viária.** A rede trafegável da Região Sul é extraída do OpenStreetMap [OSM] (arquivo
+`sul-261003.osm.pbf`, cobrindo RS, SC e PR) e indexada em H3 na resolução 13, resultando em
+cerca de 11,8 milhões de células — o conjunto de posições válidas por onde um motorista pode,
+de fato, trafegar.
 
-**Dados geoespaciais externos.** Três fontes complementares foram integradas como artefatos reutilizáveis (Seção 3.2):
+**Voos atrasados.** As chegadas vêm do VRA (Voos Regulares Ativos) da ANAC [ANAC_VRA], que
+registra horário previsto e horário real de cada operação — e, portanto, o **atraso**. Diferente
+de uma simples contagem de chegadas, o VRA permite tratar o atraso como evento: uma aeronave que
+pousa fora da janela esperada descompassa a oferta de carros já posicionada, e é esse descompasso
+que aquece a demanda [FLORES_2018].
 
-- *Polígonos do SBPA:* arquivo KMZ com 4 áreas aeroportuárias (área interna, estacionamentos, locais de espera)
-- *UDHs da RM Porto Alegre:* 722 Unidades de Desenvolvimento Humano do Censo 2010 (fonte: ObservaPOA/PNUD, acesso 04/10/2026)
-- *Malha viária OSM:* extrato sul do Brasil via Geofabrik (`sul-261003.osm.pbf`, 407 MB, dados até 2026-10-03)
+**Clima.** O conforto térmico é medido pelo índice UTCI [UTCI_BRODE] (*Universal Thermal Climate
+Index*), que integra temperatura, umidade, vento e radiação em uma única escala de estresse. Em
+vez de usar a chuva como variável binária, a esteira trata episódios de estresse térmico no SBPA
+como eventos ponderados por severidade — reconhecendo que o desconforto, e não só a precipitação,
+desloca passageiros para o carro por aplicativo.
 
-### 3.2 Indexação Geoespacial com H3
+**Aeroporto.** As áreas do SBPA, em polígonos convertidos para células H3, delimitam o *hotspot*
+onde os eventos de voo se materializam como demanda.
 
-O sistema H3 (Uber, versão 4.x) indexa toda a superfície terrestre em células hexagonais em 16 resoluções. Adotamos quatro resoluções neste trabalho, escolhidas por suas propriedades geométricas:
+### 3.2 Indexação geoespacial com H3
 
-| Resolução | Área média | Uso neste trabalho |
-|:---------:|:----------:|---|
-| 13 | ~0,000043 km² | identificador sub-métrico único (UDH centróide, via OSM) |
-| 10 | ~0,015 km² | cobertura detalhada das UDHs (nível de quadra) |
-| 8 | ~0,737 km² | feature de aeroporto e zona de demanda (padrão da pipeline) |
-| 5 | ~252,9 km² | região metropolitana (granularidade macro) |
+A malha viária em resolução 13 (~3,5 m de aresta) é agregada ao seu *parent* na resolução 12
+(~9,4 m) — a granularidade em que o modelo de mobilidade foi calibrado. Posições de motoristas,
+origens, destinos e zonas de evento passam a viver nesse mesmo referencial hexagonal, o que torna
+imediata tanto a verificação de trafegabilidade de um ponto quanto o cálculo de distâncias
+aproximadas por contagem de saltos entre células.
 
-**Conversão KMZ → H3.** Um script CLI reutilizável (`scripts/kmz_to_h3.py`) extrai polígonos de arquivos KMZ, aplica modo `center` (centróide da célula dentro do polígono) para resoluções finas e `overlap` (célula toca o polígono) para resoluções grossas, e gera artefatos JSON e Markdown auditáveis. A Tabela 1 resume os resultados para o SBPA.
+### 3.3 Modelo de eventos de demanda
 
-**Tabela 1: Células H3 por área do Aeroporto Salgado Filho (SBPA).**
+A demanda não é homogênea no espaço nem no tempo: ela se adensa quando algo observável acontece.
+Dois geradores de evento são modelados. O primeiro são os **voos atrasados**: cada hora com ao
+menos uma chegada atrasada abre uma janela de demanda no aeroporto, com peso **proporcional ao
+volume de passageiros** daquela janela. Como o VRA não traz a contagem de passageiros, usa-se o
+número de chegadas na hora como *proxy*, multiplicado por um fator de ocupação por aeronave —
+de modo que horas com mais voos aquecem mais a demanda. O segundo são os episódios de **estresse
+térmico** (UTCI no SBPA), ponderados por uma severidade de 4 a 7. A natureza desses eventos é
+dupla, e é isso que interessa à proposta: eles movem a demanda e, ao mesmo tempo, são
+**verificáveis pelo próprio motorista** — qualquer um pode consultar um voo atrasado ou sentir o
+calor que o modelo diz importar.
 
-| Área | Centróide (lat, lng) | Res 13 | Res 10 | Res 8 | Res 5 |
-|------|---------------------|-------:|-------:|------:|------:|
-| Área interna | −29,9889°, −51,1761° | 2.002 | 12 | 2 | 1 |
-| Estacionamento Movida | −29,9903°, −51,1830° | 922 | 6 | 1 | 1 |
-| Local de espera I | −29,9886°, −51,1791° | 178 | 5 | 1 | 1 |
-| Local de espera II | −29,9930°, −51,1860° | 292 | 8 | 3 | 1 |
-| **União total** | — | **3.394** | **31** | **7** | **1** |
+### 3.4 Simulação baseada em agentes
 
-**Indexação das UDHs.** As 722 UDHs da RM Porto Alegre foram convertidas para H3 em quatro resoluções. Para a resolução 13, a área da maior UDH (~812 km²) corresponderia a ~19 milhões de células — computacionalmente inviável. Adotamos a estratégia de **centróide único em res 13** (identificador sub-métrico) e cobertura completa em res 10/8/5. A Tabela 2 apresenta os resultados.
+Sobre esse cenário, 30.000 motoristas-agentes circulam pela malha H3. Cada motorista é uma
+entidade persistente e rastreável — `driver_id` estável, residência fixa, jornada-base e
+reputação próprias —, de modo que o agente 42 no primeiro dia é o mesmo no último. A dinâmica
+reproduz traços do trabalho real, não como enfeite, mas porque são eles que produzem os padrões
+que o modelo preditivo deverá recuperar:
 
-**Tabela 2: Cobertura H3 das 722 UDHs da RM Porto Alegre.**
+- **Jornada orientada a meta.** Cada motorista roda até cumprir uma meta diária sorteada entre 25
+  e 35 corridas, respeitando um teto de 12 h (piso de 8 h) — o comportamento de "rodar até a meta".
+- **Turnos.** 85% iniciam o turno entre 4 h e 14 h; 15% assumem um turno noturno a partir das 18 h
+  que cruza a meia-noite, garantindo cobertura da madrugada. A probabilidade de trabalhar varia
+  por dia da semana.
+- **Mobilidade de duas velocidades.** O tempo de viagem usa 50 km/h em escala urbana e 90 km/h em
+  trajetos interurbanos (limiar de 15 km), com corridas limitadas a 25 km — a escala da região.
+- **Retorno para casa.** Após 20 corridas, os destinos convergem para as proximidades do ponto da
+  primeira corrida do dia (raio de 8 km).
+- **Reputação e encadeamento.** Cada motorista carrega uma nota em [4,79; 4,99] diluída sobre um
+  histórico de 10 a 20 mil corridas, atualizada corrida a corrida de forma ínfima — como em um
+  aplicativo real; motoristas de nota alta recebem corridas encadeadas perto do destino, que podem
+  aceitar ou recusar.
 
-| Resolução | Área/célula | Estratégia | Células únicas |
-|:---------:|:----------:|------------|:--------------:|
-| 13 | 0,000043 km² | centróide por UDH | 722 |
-| 10 | 0,015 km² | overlap (cobertura total) | 808.224 |
-| 8 | 0,737 km² | overlap (cobertura total) | 17.065 |
-| 5 | 252,9 km² | overlap (cobertura total) | 73 |
+### 3.5 O dado contribuído e a inferência de corridas
 
-O arquivo de *lookup* `RM_PortoAlegre_UDHs2010_lookup.csv` (schema: `udh_code, centroid_lat, centroid_lng, h3_r13, h3_r10, h3_r8, h3_r5, is_multigeometry`) permite enriquecer corridas com indicadores socioeconômicos do Censo 2010 via *join* por `h3_r8` — possibilitando análises de equidade.
+Cada corrida simulada registra, entre outros campos, `datetime`, `origin_h3`/`destination_h3` com
+as respectivas latitudes e longitudes, distância e tempo de viagem, o evento associado, a nota do
+motorista e o booleano `com_passageiro`. É esse último que fecha o laço com a moldura do trabalho:
+a transição de `com_passageiro`, de falso para verdadeiro e de volta, é o que converte uma
+sequência de posições em corrida identificável — embarque e desembarque inferidos da própria
+telemetria, sem recurso a qualquer registro proprietário. O dado gerado é, por construção, o dado
+que um motorista real poderia contribuir.
 
-**Indexação da malha viária OSM.** O arquivo PBF (`sul-261003.osm.pbf`, 407 MB, dados até 2026-10-03T20:20:50Z) foi processado com a biblioteca `osmium` em dois passos: (1) carregamento das localizações de nós; (2) iteração sobre `way` com tag `highway` em 14 tipos navegáveis (de `motorway` a `service`), filtrados pela *bounding box* da RM Porto Alegre (lat −31,5° a −29,0°; lng −52,5° a −50,5°). Para cada aresta (par consecutivo de nós), `h3.grid_path_cells(cell_start, cell_end)` retorna todas as células H3 res 13 ao longo do segmento. Células com múltiplas vias recebem a via de maior prioridade hierárquica (motorway > trunk > ... > service).
+### 3.6 Reprodutibilidade e auditabilidade
 
-**Tabela 3: Malha viária navegável da RM Porto Alegre em H3 res 13.**
+A esteira é determinística: uma semente global em `params.yaml` governa toda a aleatoriedade, e
+cada *worker* paralelo deriva sua própria semente de forma previsível (`seed + 1 + i`),
+preservando a reprodução mesmo na execução distribuída. Os artefatos — malha, eventos, dataset —
+são versionados por hash, e as premissas da simulação vivem em arquivos de configuração
+declarativos (`config/driver_simulation.yaml`), não em constantes espalhadas pelo código. A
+saída é um Parquet particionado por mês, compacto o bastante (~48 bytes por corrida) para
+alimentar diretamente a etapa de modelagem.
 
-| Métrica | Valor |
-|---------|------:|
-| Vias OSM processadas | 202.334 |
-| Arestas (pares de nós) | 1.709.696 |
-| Células H3 únicas (res 13) | **11.807.501** |
-| Tamanho do artefato | 249 MB (Parquet) |
-| Tipo mais frequente | `unclassified` (39,0%) |
-| Tipo menos frequente | `tertiary_link` (0,01%) |
+### 3.7 Modelagem explicável: classificação de corridas por evento de demanda
 
-O artefato `sul-261003_vias_h3r13.parquet` permite verificar se um ponto H3 res 13 é trafegável em O(1) — relevante para validação dos destinos sintéticos gerados pela pipeline.
+Gerado o dataset de corridas, a pergunta que o modelo responde é direta: dada uma corrida —
+descrita apenas por aquilo que o motorista observa ou registra —, sob qual **evento de demanda**
+ela ocorreu? O alvo é multiclasse e deriva do campo `event_name` da simulação, reduzido a três
+categorias: `voo_atrasado` (corrida sob chegada atrasada no SBPA), `estresse_termico` (corrida
+sob desconforto térmico UTCI no SBPA) e `nenhum` (sem evento associado). A classe `nenhum` domina
+— cerca de 90% das corridas —, de modo que o problema é, por construção, fortemente
+desbalanceado.
 
-### 3.3 Feature Engineering
+O vetor preditor reúne quatorze *features*, agrupadas em quatro famílias: temporais (`hour`,
+`weekday`, `month`), de trajeto (`trip_distance_km`, `trip_time_min`, `pickup_time_min`,
+`h3_distance_to_call`, `trip_seq`), geoespaciais (`origin_lat`, `origin_lng` e, sobretudo,
+`dist_to_airport_km` — a distância *great-circle* da origem ao SBPA) e de motorista
+(`driver_rating`, `driver_prior_trips`, `driver_rating_class`). Duas colunas são deliberadamente
+**excluídas por vazamento de rótulo**: `event_name`, que origina o alvo, e `chained_ride`,
+mecanismo de despacho correlato ao evento. A `dist_to_airport_km` ocupa posição especial — como
+os eventos estão ancorados no aeroporto, a proximidade a ele é o principal sinal que o modelo
+deve recuperar, e é esse o gancho da validação causal por SHAP.
 
-Os datasets meteorológico e de voos são unidos por `(_airport, ts_hour)` — *join* `LEFT` com validação `m:1` (nenhum voo se multiplica). Features derivadas:
+O classificador é um LightGBM [KE_2017] multiclasse (300 árvores, taxa 0,05, 128 folhas,
+`subsample` 0,9, `colsample_bytree` 0,8, semente fixa). O desbalanceamento é tratado **apenas no
+treino**, em dois passos: subamostragem das classes majoritárias (`RandomUnderSampler`) e, em
+seguida, SMOTE [CHAWLA_2002] (k = 5) nas minoritárias até um alvo por classe. O **conjunto de
+teste preserva a distribuição natural** (≈ 89,7 / 7,9 / 2,4%), condição para uma avaliação
+honesta sob o desbalanceamento real — nenhuma *feature* derivada do rótulo entra no modelo, e o
+rebalanceamento não contamina o teste. A robustez é aferida por `StratifiedKFold` de cinco
+dobras sobre o treino balanceado, e a explicação por SHAP (Seção 5.3) decompõe a importância
+global e por classe, servindo tanto à interpretação quanto à verificação de que o modelo
+recupera o ancoramento espacial dos eventos.
 
-| Feature | Tipo | Descrição |
-|---------|------|-----------|
-| `hour` | int [0,23] | hora do dia (UTC−3) |
-| `dow` | int [0,6] | dia da semana |
-| `month` | int [1,12] | mês |
-| `is_rain` | binário | `precipitation > 0` mm |
-| `temperature_2m` | float (°C) | temperatura horária |
-| `wind_speed_10m` | float (km/h) | velocidade do vento |
-| `h3_airport` | string | célula H3 res 8 do aeroporto de origem |
-| `h3_airport_r7` | string | célula H3 res 7 (zona macro) |
+### 3.8 Predição conversacional: devolver o conhecimento ao motorista
 
-A **fronteira anti-leakage** é explícita: todas as features usam apenas informação disponível no momento da chegada do voo.
+Treinar um classificador e exibir importâncias resolve metade do problema; a outra metade é
+fazer esse conhecimento chegar a quem dirige, no formato e no momento em que a decisão é tomada.
+A etapa final da esteira fecha esse laço. Em vez de um relatório, uma **conversa**: o motorista
+pergunta — *"vale a pena ir ao Salgado Filho amanhã às 18h?"* — e recebe, em português corrente,
+uma recomendação de ir ou não, justificada pelos mesmos fatores observáveis que o modelo aprendeu.
 
-### 3.4 Processo Gerador de Corridas Sintéticas
+A camada conversacional decompõe a demanda em duas perguntas independentes, cada uma com seu
+**modelo binário pareado**: há pico por *evento climático* nesta hora? e há pico por *voo atrasado
+na chegada*? Separar as dimensões — em vez de uma única saída multiclasse — deixa o motorista ler
+cada sinal pelo seu mérito e permite à narração explicar um sem diluir o outro. Para um horário
+futuro, as *features* são reconstruídas no mesmo espaço e em UTC pelo **mesmo código** que as
+montou no treino: não há reimplementação paralela e, com ela, some a principal fonte de
+*train/serve skew*. O clima futuro vem de uma API aberta de previsão, com recuo para a climatologia
+histórica quando a previsão falta; o sinal de voo, que não se conhece para uma data ainda não
+ocorrida, entra como **prior prospectivo** — a taxa histórica de atraso na chegada por (dia da
+semana, hora) e a reputação de companhias e origens naquele horário, estimadas apenas sobre o
+período de treino para não vazar o futuro.
 
-O processo gerador é **probabilístico, parametrizado e reprodutível**. Para cada evento de chegada de voo, o número de corridas segue Poisson(λ = 3,0). Para cada corrida:
+Cada resposta carrega uma **ficha técnica** antes da prosa: as *features* que pesaram, seus valores
+e a contribuição SHAP de cada uma — o motorista confere, no mundo, o que o modelo alega. A narração
+em linguagem natural é gerada por um modelo de linguagem compacto, mas sob rédea curta: só pode
+citar números que a ficha fornece, enquadra o fenômeno como *desembarque* de voos atrasados — é o
+passageiro que chega, não o que parte — e pondera o **esforço** do motorista, pois quanto mais
+longe do aeroporto, mais forte o sinal precisa ser para compensar a viagem. A regra de decisão é
+deliberadamente conservadora: sinal fraco não manda ninguém se deslocar, e um padrão de atraso só
+conta a favor quando é recorrente ou concentrado numa mesma companhia/origem. Se não há demanda no
+horário pedido, a camada varre as horas seguintes antes de responder.
 
-```
-n_corridas ~ Poisson(μ = 3,0)
-
-duração_base ~ N(25, 8)                         [min]
-duração = duração_base
-        × 1,20   se is_rain = 1
-        × 1,35   se hour ∈ {7, 8, 17, 18}       [pico]
-        + ε,  ε ~ N(0, 2,0)
-
-h3_destino = sample(grid_disk(h3_origem, k=5))
-dist_cells = grid_distance(h3_origem, h3_destino)
-dist_km    = great_circle_distance(centróide_origem, centróide_destino)
-```
-
-Os parâmetros são declarados em `config/synthesis.yaml` e documentados no ADR 0002. A Tabela 4 lista os valores adotados e suas referências.
-
-**Tabela 4: Parâmetros do processo gerador.**
-
-| Parâmetro | Valor | Base |
-|-----------|:-----:|------|
-| Corridas por chegada (Poisson λ) | 3,0 | estimativa conservadora [FLORES_2018] |
-| Duração base μ | 25 min | tempo médio SBPA→centro POA via OSM |
-| Duração base σ | 8 min | variabilidade em trajetos urbanos [ZHENG_2020] |
-| Multiplicador chuva | 1,20 | +20% em precipitação [PENG_2021] |
-| Multiplicador pico | 1,35 | +35% nas horas 7, 8, 17, 18 h [EPTC_2022] |
-| Dist. base μ | 18 km | raio médio destinos aeroportuários em POA |
-| Dist. base σ | 7 km | dispersão geográfica da RM |
-| Ruído σ | 2,0 min | variabilidade residual |
-
-Destinos são amostrados no `grid_disk(h3_origem, k=5)` — raio de até 5 saltos H3 em res 8, equivalente a ~35 km. A distância em saltos H3 (`dist_cells`) é uma *feature* sem leakage de rota, pois não exige conhecer o caminho real. A semente global `seed = 42` em `params.yaml` garante reprodução bit-a-bit.
-
-### 3.5 Modelagem: LightGBM com Otimização de Hiperparâmetros
-
-A variável-alvo é `duration_min`. O LightGBM [KE_2017] foi escolhido por seu desempenho em dados tabulares com features mistas (numéricas + categóricas codificadas), eficiência de memória e facilidade de integração com Optuna e SHAP.
-
-**Split temporal sem vazamento.** Adotamos corte cronológico 80/20:
-
-```python
-df = df.sort_values("ts_hour")
-corte = int(len(df) * 0.80)
-treino, teste = df.iloc[:corte], df.iloc[corte:]
-```
-
-Dados temporalmente posteriores nunca contaminam o treino — essencial para dados de séries temporais.
-
-**Otimização de hiperparâmetros.** Optuna [AKIBA_2019] com 100 *trials* e amostrador TPE (*Tree-structured Parzen Estimator*, `seed=42`). A validação cruzada durante a busca usa `TimeSeriesSplit(n_splits=5)`. A função objetivo minimiza o RMSE médio nos *folds*. Os *trials* são persistidos em SQLite (`reports/metrics/optuna.db`) para auditoria e retomada.
-
-O espaço de busca cobre: `learning_rate` ∈ [0,001; 0,3] (log-uniforme), `num_leaves` ∈ [15, 255], `max_depth` ∈ [3, 12], `min_child_samples` ∈ [5, 200], `subsample` ∈ [0,5; 1,0], `colsample_bytree` ∈ [0,5; 1,0], `reg_alpha` e `reg_lambda` ∈ [10⁻⁸; 10] (log-uniforme).
-
-**Avaliação.** O modelo final é treinado no split de treino e avaliado no split de teste. Métricas: RMSE, MAE e R², além de *baseline* ingênuo (média de treino).
-
-### 3.6 Explicabilidade via SHAP
-
-Para interpretar as predições e validar a recuperação das relações injetadas, utilizamos o `TreeExplainer` do SHAP [LUNDBERG_2017] sobre uma amostra de 2.000 instâncias. Geramos:
-
-- **Summary plot** (importância global via média |SHAP|): verifica se `is_rain` e indicadores de pico são as *features* mais importantes
-- **Dependence plots** para `is_rain`, `hour` e `temperature_2m`: verificam direcionalidade
-- **Ranking auditável** em `reports/shap/mean_abs_shap.json`
-
-A **validação causal** exige que:
-1. `is_rain` apresente SHAP positivo e importância estatisticamente significativa
-2. O efeito marginal de `is_rain` estimado via SHAP seja próximo do parâmetro `rain_multiplier = 1,20`
-3. As horas 7, 8, 17 e 18 apresentem SHAP positivo no *dependence plot* de `hour`
-
-### 3.7 Narração em Linguagem Natural
-
-O módulo de narração (`src/tese_pipeline/narration/narrate.py`) converte a predição e as principais contribuições SHAP em texto determinístico e cauteloso. A função `validar_numeros()` aplica validação anti-alucinação: todos os números no texto gerado são verificados contra um conjunto de valores permitidos com tolerância configurável. A narração usa linguagem associativa ("aumentou a estimativa"), nunca causal.
-
-### 3.8 Reprodutibilidade e Auditabilidade
-
-Cada artefato gerado recebe um *sidecar* `.meta.json` com: SHA-256 do arquivo, SHA do commit git, timestamp UTC e parâmetros usados. A esteira é declarativa em `dvc.yaml`; `dvc repro` reexecuta apenas os estágios cujos entradas mudaram. Dados são versionados fora do Git (DVC + GCS), com apenas ponteiros `.dvc` no repositório.
-
----
+O ponto não é a sofisticação do texto. É o endereçamento: a inteligência construída sobre o dado
+contribuído volta ao trabalhador como resposta acionável — não como mais um painel que ele não
+controla.
 
 ## 4. Configuração Experimental
 
-### 4.1 Contexto Geográfico
+### 4.1 Contexto
 
-O Aeroporto Internacional Salgado Filho (ICAO: SBPA) está localizado em Porto Alegre, capital do Rio Grande do Sul (lat −29,9944°, lng −51,1713°). Com aproximadamente 4 milhões de passageiros anuais antes da pandemia [INFRAERO_2023], é o maior aeroporto da Região Sul do Brasil. Sua localização urbana — a ~6 km do centro histórico e inserida na RM Porto Alegre — o torna um polo de demanda significativa para *ride-hailing*.
+O recorte inicial é o Aeroporto Internacional Salgado Filho (SBPA), em Porto Alegre — polo de
+demanda concentrada onde os dois sinais observáveis têm efeito direto e mensurável. Começar pelo
+aeroporto é decisão metodológica: ali o problema é denso o bastante para ser estudado e delimitado
+o bastante para ser auditado, com a Região Metropolitana de Porto Alegre como horizonte de
+expansão natural.
 
-A RM Porto Alegre, com 34 municípios e ~4,3 milhões de habitantes (IBGE 2022), é delimitada pelos polígonos das 722 UDHs indexadas neste trabalho (centróides entre lat −30,30° e −29,57°; lng −51,92° e −50,53°).
+### 4.2 Parâmetros do *run* completo
 
-### 4.2 Parâmetros de Execução
+O primeiro *run* completo foi executado na nuvem (Google Compute Engine, `southamerica-east1`).
+A Tabela 1 resume sua configuração efetiva.
 
-**Tabela 5: Configuração experimental.**
+**Tabela 1: Configuração do *run* completo de simulação.**
 
 | Parâmetro | Valor |
 |-----------|-------|
-| Aeroporto (ICAO) | SBPA — Salgado Filho, Porto Alegre/RS |
-| Período de dados | 2025-01-01 a 2025-12-31 |
-| Granularidade temporal | 1 hora |
-| `n_rides` (total sintético) | 50.000 |
-| `seed` global | 42 |
-| H3 res padrão (`h3_resolution`) | 8 (~0,74 km²) |
-| H3 res macro (`h3_macro_resolution`) | 7 (~5,16 km²) |
-| Raio máximo de destinos (`max_destination_k`) | 5 saltos H3 |
-| *Folds* Optuna (`TimeSeriesSplit`) | 5 |
-| *Trials* Optuna | 100 |
-| Amostra SHAP | 2.000 instâncias |
-| Linguagem / versão | Python 3.11 |
-| Principais bibliotecas | LightGBM ≥ 4.3, Optuna ≥ 3.6, SHAP ≥ 0.45, H3 ≥ 4.1, pandas ≥ 2.2 |
-| Armazenamento em nuvem | Google Cloud Storage (`doutorado-501917`, `southamerica-east1`) |
+| Período simulado | 2025-01-01 a 2026-01-01 (ano completo) |
+| Frota | 30.000 motoristas |
+| Malha viária | 4.901.407 células H3 res 12 (de 11,8 M em res 13) |
+| Eventos de demanda | 5.127 (2.812 de voo atrasado + 2.315 de estresse térmico) |
+| Meta diária por motorista | 25–35 corridas |
+| Paralelismo | 16 *workers* (streaming dia a dia) |
+| Semente global | fixa (`params.yaml`); por *worker*: `seed + 1 + i` |
+| Saída | Parquet particionado por mês (compressão zstd) |
 
 ### 4.3 Reprodutibilidade
 
-Toda a esteira é versionada com DVC 3.x: dados brutos, intermediários e finais são rastreados por hash MD5/SHA-256 e registrados em `dvc.yaml`. O comando `dvc repro` reproduz o *pipeline* completo a partir de zero. O repositório está disponível em `github.com/FABRICIOBARILI/tese-pipeline` sob licença MIT (CITATION.cff: DOI a ser registrado).
-
----
+Toda a esteira é versionada e declarativa: dados e artefatos rastreados por hash via DVC
+[KUPRIEIEV_2021], premissas em `config/driver_simulation.yaml`, e execução reproduzível a partir
+de uma semente fixa. O repositório será publicado sob licença MIT em
+`github.com/FABRICIOBARILI/tese-pipeline`.
 
 ## 5. Resultados e Discussão
 
-> **Nota:** resultados obtidos pela execução completa de `dvc repro` em 2026-10-04. Artefatos em `reports/metrics/eval.json`, `reports/shap/mean_abs_shap.json` e `reports/delay_analysis/classifier_metrics.json`.
+> **Nota:** valores marcados com [ILL] são *ilustrativos*, a substituir após a conclusão do
+> *run* e do treino; [A_PREENCHER] indica estatística do dataset final ainda pendente de
+> consolidação.
 
-### 5.1 Dataset Sintético
+### 5.1 Dados Sintéticos Gerados
 
-Após execução do processo gerador sobre **27.959** chegadas coletadas para o período 2025-01-01 a 2025-12-31, foram geradas **50.000 corridas sintéticas**. A Tabela 6 sumariza estatísticas descritivas.
+A simulação produz um dataset de corridas no esquema do dado contribuído pelo motorista, com uma
+linha por corrida. Cada registro reúne identificação e sequência (`driver_id`, `trip_seq`),
+tempo (`request_ts`, `datetime`, `weekday`, `hour`), geografia em H3 e em coordenadas
+(`origin_h3`/`destination_h3`, `origin_lat`/`lng`, `dest_lat`/`lng`), medidas de deslocamento
+(`h3_distance_to_call`, `trip_distance_km`, `pickup_time_min`, `trip_time_min`), o evento
+associado (`event_name`), a reputação (`driver_rating`, `driver_rating_class`,
+`driver_prior_trips`), o marcador de encadeamento (`chained_ride`), a avaliação da corrida
+(`trip_score`) e o booleano `com_passageiro`. O formato é compacto — da ordem de 48 bytes por
+corrida — e particionado por mês, pronto para carga em LightGBM e explicação via SHAP.
 
-**Tabela 6: Estatísticas descritivas das corridas sintéticas.**
+Quanto ao volume, o dataset consolidado reúne **267.388.602 corridas** — o ano de 2025 completo,
+com os 30.000 motoristas —, distribuídas em 6.032 *shards* Parquet (compressão zstd, cerca de
+13,2 GB). Entre essas corridas, a esmagadora maioria ocorre fora de qualquer evento de demanda
+(89,72%); o restante divide-se entre episódios de estresse térmico (7,94%) e de voo atrasado
+(2,35%) ancorados no SBPA — um desbalanceamento acentuado que condicionará a etapa de modelagem.
 
-| Variável | Média | Desvio-padrão | Mín | Máx |
-|----------|------:|:-------------:|----:|----:|
-| `duration_min` | 27,5 | 10,0 | 1,0 | 83,6 |
-| `distance_km` | 3,0 | 2,0 | 0,8 | 38,2 |
-| `dist_cells` (saltos H3) | 3,6 | 1,3 | 0 | 5 |
-| `is_rain` (%) | 16,3% | — | 0% | 100% |
+A fidelidade do processo gerador foi verificada em um *run* de validação (200 motoristas, 7 dias),
+cujos indicadores aparecem na Tabela 2. Eles não medem desempenho preditivo — medem se a simulação
+reproduz o comportamento que se propôs a reproduzir, condição para que os padrões recuperados pelo
+modelo tenham sentido.
 
-A correlação entre `duration_min` e `is_rain` no dataset sintético é de aproximadamente **+0,20** (*p* < 0,001), consistente com o multiplicador injetado de 1,20.
+**Tabela 2: Validação do processo gerador (*run* de 200 motoristas, 7 dias).**
 
-### 5.2 Desempenho do Modelo
+| Critério | Alvo | Observado |
+|----------|------|-----------|
+| Corridas por motorista/dia | 25–35 | 30,0 |
+| Jornada máxima | ≤ 12 h | 11,9 h |
+| Trajeto | escala urbana | ≤ 25 km (média ~12 km) |
+| Corridas na madrugada (0–5 h) | existir | ~1,4% |
+| Nota do motorista | 4,79–4,99 | 4,80–4,99 |
+| Corrida encadeada | só nota alta | 100% em classe alta |
 
-**Tabela 7: Métricas de avaliação no conjunto de teste (split temporal 80/20).**
+Os números do *run* completo (distribuição de corridas por evento, por hora e por célula H3)
+serão reportados após a consolidação do dataset [A_PREENCHER]. Importa, desde já, o que a Tabela 2
+mostra: a meta de ~30 corridas/dia é cumprida, a jornada respeita o teto, a madrugada existe sem
+dominar, e o encadeamento de corridas permanece restrito à classe de nota alta — ou seja, a
+dinâmica de agentes gera a estrutura espaço-temporal que a etapa seguinte, de modelagem explicável,
+terá a tarefa de recuperar.
 
-| Modelo | RMSE (min) | MAE (min) | R² |
-|--------|----------:|----------:|:--:|
-| *Baseline* (média de treino) | 10,11 | 7,79 | 0,00 |
-| LightGBM (melhores HPs) | **9,24** | **7,30** | **0,165** |
-| Redução RMSE vs. *baseline* | **8,6%** | — | — |
+### 5.2 Desempenho Preditivo
 
-O modelo LightGBM apresenta redução de **8,6%** no RMSE em relação ao *baseline*, confirmando que as *features* contextuais (meteorologia, hora, dia da semana, H3) carregam sinal preditivo relevante. Os melhores hiperparâmetros encontrados pelo Optuna foram: `learning_rate ≈ 0,084`, `num_leaves = 238`, `max_depth = 3`. O R² de 0,165 é modesto mas esperado dado o ruído intrínseco do processo gerador (σ = 2 min de ruído residual + variação Poisson).
+O classificador de eventos (Seção 3.7) foi avaliado sobre o **conjunto de teste com distribuição
+natural** — 6,33 milhões de corridas, extraídas por divisão estratificada 70/30 da amostra de
+desenvolvimento (21,1 milhões de linhas, 503 *shards* estratificados do dataset completo). Por
+ser o pipeline determinístico, as métricas se repetem de forma idêntica a cada execução; a
+Tabela 3 as reúne.
+
+**Tabela 3: Desempenho do classificador de eventos (amostra 21,1 M; teste natural de 6,33 M).**
+
+| Métrica | Valor |
+|---------|-------|
+| Acurácia | 0,992 |
+| F1 *weighted* | 0,992 |
+| F1 *macro* | 0,932 |
+| MCC (Matthews) | 0,958 |
+| ROC-AUC (OvR, *weighted*) | 1,000 |
+| F1 *macro* (validação cruzada, 5 dobras) | 0,949 ± 0,000 |
+
+Três leituras importam. A primeira é a distância entre o F1 *weighted* (0,992) e o F1 *macro*
+(0,932): como o teste preserva o desbalanceamento real, o primeiro é dominado pela classe
+`nenhum`, enquanto o segundo — que pesa as três classes por igual — expõe o custo de acertar a
+minoria `voo_atrasado` (2,35% das corridas); foi para atenuar essa dificuldade que se aplicou
+subamostragem e SMOTE no treino. A segunda é a estabilidade: o MCC de 0,958, robusto a
+desbalanceamento, e o F1 *macro* de validação cruzada (0,949, com desvio praticamente nulo)
+confirmam que o desempenho não é artefato de uma partição particular.
+
+A terceira leitura trata do número que mais chama a atenção — a ROC-AUC (OvR) de 1,000. Longe de
+ser evidência de um modelo "perfeito", ela reflete uma propriedade do processo gerador: os
+eventos de demanda estão **ancorados no aeroporto**, de modo que a `dist_to_airport_km` separa
+quase deterministicamente as corridas sob evento das demais. O modelo não descobriu uma regra
+oculta da cidade; recuperou a estrutura espacial que a simulação injetou — exatamente o que a
+validação causal da próxima seção se propõe a tornar explícito. Esse resultado é, portanto, uma
+confirmação de coerência interna, não uma promessa de generalização ao mundo real, e será
+reexaminado no *run* completo de 267 milhões de corridas, cujos resultados — métricas por classe,
+matriz de confusão e importâncias SHAP — estão pendentes de consolidação na nuvem [PENDENTE].
 
 ### 5.3 Validação Causal via SHAP
 
-A Figura 2 (*summary plot* SHAP) exibe as *features* por importância global (média |SHAP|).
+_(a redigir — recuperação dos efeitos de voo atrasado e estresse térmico.)_
 
-**Tabela 8: Top-5 *features* por importância SHAP.**
+### 5.4 O que o Motorista Aprende
 
-| Rank | Feature | Mean \|SHAP\| (min) | Interpretação |
-|:----:|---------|--------------------:|---------------|
-| 1 | `hour` | 2,650 | efeito de pico nas horas 7, 8, 17, 18 |
-| 2 | `is_rain` | 1,471 | multiplicador de precipitação |
-| 3 | `wind_speed_10m` | 0,344 | vento intenso correlaciona com maior duração |
-| 4 | `temperature_2m` | 0,332 | correlação sazonal com inverno/verão |
-| 5 | `month` | 0,135 | sazonalidade mensal herdada dos dados de voos |
+O ganho para quem dirige não está na métrica, mas no que a conversa devolve. Perguntado sobre um
+sábado às 18h, o sistema não responde com uma probabilidade crua: expõe os fatores que pesaram —
+a chance de chegadas atrasadas, as companhias que historicamente atrasam naquele horário, a
+temperatura, a distância a percorrer — e fecha com uma recomendação objetiva. Um exemplo
+ilustrativo, extraído de um *run* de desenvolvimento, dá a medida do que o motorista recebe [ILL]:
 
-- **Efeito da chuva:** `is_rain` é a segunda *feature* mais importante (Mean |SHAP| = 1,471 min). O *dependence plot* confirma SHAP positivo para todos os casos em que `is_rain = 1`, consistente com o multiplicador injetado de 1,20.
+> *Veredito: SIM (atraso 56% | clima 7%). Há um padrão recorrente de chegadas atrasadas nesse
+> horário, concentrado em Azul e Gol; o vento e a temperatura amenos não ajudam, mas também não
+> cancelam o sinal; o esforço é médio (~6 km). Recomendação: vale a ida — foque nas chegadas da
+> Azul.*
 
-- **Horário de pico:** `hour` é a *feature* dominante (Mean |SHAP| = 2,650 min). O *dependence plot* de `hour` apresenta valores SHAP positivos e elevados nas horas 7, 8, 17 e 18 — exatamente o padrão injetado pelo `peak_hour_multiplier = 1,35`.
+O que antes era privilégio do agregado — saber onde e quando a demanda se forma — passa a ser
+interrogável por quem está ao volante e, mais que isso, **verificável**: o motorista pode conferir
+o voo atrasado e sentir o calor que o modelo diz importar. É aqui que a proposta se mostra
+sustentável no plano técnico. Não eliminamos a assimetria; demonstramos um caminho em que o
+conhecimento deixa de ser monopólio e vira recurso de decisão do trabalhador.
 
-- **Variáveis meteorológicas complementares:** `wind_speed_10m` (0,344) e `temperature_2m` (0,332) são terceira e quarta mais importantes, capturando correlações sazonais e de condição climática presentes nos dados ERA5 de 2025.
+### 5.5 Limitações
 
-- **`dist_cells` com importância reduzida (8ª posição, 0,028):** a distância em saltos H3 apresentou importância menor que o esperado. Isso reflete a distribuição espacial das corridas sintéticas — com distância média de 3,0 km (raio de destino conservador do `grid_disk k=5` em res 8), a variabilidade de `dist_cells` é relativamente baixa.
-
-Esse alinhamento constitui a **validação de coerência interna** da pipeline: o modelo aprende o que o gerador planejou ensinar.
-
-### 5.4 Limitações
-
-1. **Validade externa:** os achados refletem as premissas do gerador, não observações reais do SBPA. Calibração com dados reais fortalecerá a validade do modelo.
-2. **Estrutura de dependência simplificada:** o gerador usa distribuições marginais independentes; correlações entre features (chuva × vento) não são modeladas.
-3. **Ausência de efeitos sazonais de demanda aérea:** férias e alta temporada não são modelados além do que está presente nos dados de voos.
-4. **Generalização:** parâmetros do gerador precisam ser reajustados para outros aeroportos.
-5. **Dados socioeconômicos:** os artefatos H3 das UDHs foram preparados mas não integrados como *features* nesta versão — trabalho futuro.
-
----
+_(a redigir — passageiros como proxy; eventos só no aeroporto; ausência de camada de vizinhança;
+calibração herdada.)_
 
 ## 6. Conclusão
 
-Este trabalho apresentou uma pipeline reprodutível e auditável para previsão de demanda de corridas por aplicativo em contexto aeroportuário, operando sobre dados inteiramente sintéticos gerados a partir de chegadas reais de voos (OpenSky Network) e dados meteorológicos históricos (Open-Meteo ERA5), com indexação geoespacial H3 em múltiplas resoluções e validação da malha viária via OpenStreetMap.
+Este trabalho percorreu uma esteira de Ciência de Dados completa — da coleta e fabricação do dado
+à predição devolvida em linguagem natural — montada sobre um princípio: o que alimenta a
+inteligência é contribuído pelo próprio motorista, no esquema mínimo `(latitude, longitude,
+datetime, com_passageiro)`. Entre as pontas, a pipeline normaliza fontes públicas, indexa o espaço
+em H3, faz emergir corridas de uma simulação baseada em agentes sobre a malha viária real, treina
+um modelo explicável e, enfim, abre uma conversa em que o trabalhador interroga o que foi aprendido.
+Cada estágio é versionado e auditável; nenhuma etapa esconde de onde veio seu resultado.
 
-A contribuição central é tripla: (i) um método de geração de dados sintéticos condicionado e auditável, com parâmetros declarativos e justificados em ADRs; (ii) um protocolo de validação causal baseado em SHAP que verifica se o modelo LightGBM recupera as relações injetadas pelo gerador; e (iii) uma base de indexação geoespacial H3 para a RM Porto Alegre — 722 UDHs e 11,8 milhões de células da malha viária OSM — disponibilizada como artefatos reutilizáveis para a comunidade de pesquisa em mobilidade urbana.
+O que se demonstra não é uma solução para a assimetria entre plataforma e motorista — é a
+**viabilidade técnica** de uma proposta: elementos observáveis, registrados por quem trabalha,
+bastam para compor uma inteligência preditiva e explicável a serviço de sua autonomia
+informacional. A previsão é o meio; o fim é mostrar que o caminho se sustenta.
 
-Os resultados demonstram que a abordagem produz um modelo que aprende fielmente as premissas do gerador — com SHAP identificando corretamente a chuva e o horário de pico como as variáveis de maior influência. A esteira completa é reprodutível a partir de um único `dvc repro`, com todos os artefatos versionados no Google Cloud Storage.
-
-**Trabalhos futuros:** (a) calibração dos parâmetros do gerador com dados reais do SBPA; (b) integração das UDHs como *features* socioeconômicas; (c) extensão para previsão de demanda agregada por zona H3 (não apenas duração individual); (d) incorporação de features de atraso de voos; (e) comparação com modelos neurais (LSTM, Transformer) preservando o protocolo de validação causal; (f) validação da malha viária como filtro de destinos plausíveis.
-
-O repositório está disponível em `github.com/FABRICIOBARILI/tese-pipeline` (licença MIT).
+Restam frentes abertas. A validação sobre dados reais de motoristas, à medida que o volume
+contribuído cresça, é o passo natural seguinte; a expansão do recorte aeroportuário para a Região
+Metropolitana de Porto Alegre — com uma camada de vizinhança que o modelo atual não contempla —
+amplia o alcance; e a calibração do limiar de decisão à prevalência real, não à balanceada do
+experimento, resta como ajuste necessário antes de qualquer uso em campo. O repositório, sob
+licença MIT, acompanha cada uma dessas frentes.
 
 ---
 
 ## Referências
 
-[ABILIO_2020] ABÍLIO, Ludmila Costhek. Uberização: a era do trabalhador just-in-time? *Estudos Avançados*, São Paulo, v. 34, n. 98, p. 111–126, 2020.
+_(Reaproveitar e consolidar a partir de `sbbd-2026-draft-v0.3-sintetico.md`, mantendo apenas as
+chaves efetivamente citadas nesta versão. Chaves já usadas: BARILI_TESE, VANDIJCK_2018,
+ABILIO_2020, MCDAID_2023, MURAKAMI_WOOD_2019, GROHMANN_2021, PHATAK_2022, WOODCOCK_2026, UBER_H3,
+UBER_MOVEMENT, HOLZINGER_2023, KOBAYASHI_2024, KUPRIEIEV_2021, KE_2017, LUNDBERG_2017,
+LUNDBERG_2020, YAO_2018, DIDI_2018, CHEN_2016, ZHENG_2020, FLORES_2018, TAN_2016, YANG_2020,
+BONNETAIN_2021, BASU_2020, YUAN_2022, LI_2021, ZHANG_2022, BARREDO_2020.)_
 
-[AKIBA_2019] AKIBA, T. et al. Optuna: A next-generation hyperparameter optimization framework. In: *Proc. 25th ACM SIGKDD*, 2019. p. 2623–2631.
-
-[BARREDO_2020] BARREDO ARRIETA, A. et al. Explainable Artificial Intelligence (XAI): concepts, taxonomies, opportunities and challenges toward responsible AI. *Information Fusion*, v. 58, p. 82–115, 2020.
-
-[BASU_2020] BASU, R. et al. Automated mobility on demand: literature review and prospects for future research. *Transportation Research Part A*, v. 131, p. 80–100, 2020.
-
-[BONNETAIN_2021] BONNETAIN, L. et al. A ride-pooling simulation framework with activity-based demand generation. *Transportation Research Part C*, v. 122, 2021.
-
-[BRODSKY_2018] BRODSKY, I. H3: Uber's hexagonal hierarchical spatial index. *Uber Engineering Blog*, 2018. Disponível em: https://www.uber.com/blog/h3/.
-
-[CHEN_2016] CHEN, T.; GUESTRIN, C. XGBoost: A scalable tree boosting system. In: *Proc. 22nd ACM SIGKDD*, 2016. p. 785–794.
-
-[DIDI_2018] GUO, S. et al. Deep spatial-temporal 3D convolutional neural networks for passenger demand prediction on ride-sharing platforms. In: *IEEE ICDE*, 2018.
-
-[EPTC_2022] EMPRESA PÚBLICA DE TRANSPORTE E CIRCULAÇÃO (EPTC). Boletim de Mobilidade Urbana de Porto Alegre 2022. Porto Alegre: EPTC, 2022.
-
-[FLORES_2018] FLORES, O.; RAYLE, L. How cities use regulation for innovation: the case of Uber, Lyft and Sidecar in San Francisco. *Transportation Research Record*, 2018.
-
-[GONZALEZ_2023] GONZALEZ, M. C. et al. Reproducible mobility modeling for smart city research. *Nature Cities*, v. 1, p. 12–20, 2023.
-
-[GROHMANN_2021] GROHMANN, R. et al. Platform scams: Brazilian workers' experiences of dishonest and uncertain algorithmic management. *New Media & Society*, v. 23, n. 10, p. 2957–2974, 2021.
-
-[HAKLAY_2010] HAKLAY, M. How good is volunteered geographical information? A comparative study of OpenStreetMap and Ordnance Survey datasets. *Environment and Planning B*, v. 37, p. 682–703, 2010.
-
-[HOLZINGER_2023] HOLZINGER, A. et al. Toward human-level concept learning. *Patterns*, v. 4, 100788, 2023.
-
-[INFRAERO_2023] INFRAERO. Anuário Estatístico de Operações Aeroportuárias 2023. Brasília: INFRAERO, 2023.
-
-[KE_2017] KE, G. et al. LightGBM: A highly efficient gradient boosting decision tree. In: *NeurIPS*, 2017. p. 3146–3154.
-
-[KOBAYASHI_2024] KOBAYASHI, K.; ALAM, S. B. Explainable, interpretable & trustworthy AI for intelligent digital twin. *arXiv*, 2024.
-
-[KUPRIEIEV_2021] KUPRIEIEV, R. et al. DVC: Data Version Control. Zenodo, 2021. DOI: 10.5281/zenodo.4450131.
-
-[LI_2021] LI, Z. et al. A SHAP-based machine learning approach for bus demand forecasting. *IEEE Trans. Intelligent Transportation Systems*, 2021.
-
-[LUNDBERG_2017] LUNDBERG, S. M.; LEE, S.-I. A unified approach to interpreting model predictions. In: *NeurIPS*, 2017. p. 4765–4774.
-
-[LUNDBERG_2020] LUNDBERG, S. M. et al. From local explanations to global understanding with explainable AI for trees. *Nature Machine Intelligence*, v. 2, p. 56–67, 2020.
-
-[MCDAID_2023] McDAID, E.; ANDON, P.; FREE, C. Algorithmic management and the politics of demand: control and resistance at Uber. *Accounting, Organizations and Society*, v. 109, art. 101465, 2023.
-
-[PENG_2021] PENG, Z. et al. Meta-analysis of the effect of rainfall on urban travel time. *Transportation Research Part D*, v. 98, 2021.
-
-[SCHAFER_2014] SCHÄFER, M. et al. Bringing up OpenSky: a large-scale ADS-B sensor network for research. In: *IPSN*, 2014.
-
-[TAN_2016] TAN, H. et al. A hybrid deep learning model for airport taxi demand prediction. In: *IEEE ITS*, 2016.
-
-[UBER_MOVEMENT] UBER. Uber Movement: travel time data for cities. Disponível em: https://movement.uber.com. Acesso em: out. 2026.
-
-[VANDIJCK_2018] VAN DIJCK, J.; POELL, T.; DE WAAL, M. *The platform society: public values in a connective world*. New York: Oxford University Press, 2018.
-
-[YAO_2018] YAO, H. et al. Deep multi-view spatial-temporal network for taxi demand prediction. In: *AAAI*, 2018. p. 2588–2595.
-
-[YANG_2020] YANG, Z. et al. Effects of weather on taxi demand and supply. *Travel Behaviour and Society*, v. 20, 2020.
-
-[YUAN_2022] YUAN, Z. et al. Activity trajectory generation via modeling spatiotemporal dynamics. In: *Proc. 28th ACM SIGKDD*, 2022.
-
-[ZHANG_2022] ZHANG, Z. et al. SHAP values for explainable traffic accident prediction. *Accident Analysis & Prevention*, v. 169, 2022.
-
-[ZHENG_2020] ZHENG, G. et al. Feature engineering for predictive models in urban transportation. *Transportation Research Part C*, v. 114, p. 200–215, 2020.
-
-[ZIPPENFENIG_2023] ZIPPENFENIG, P. Open-Meteo.com Weather API. Zenodo, 2023. DOI: 10.5281/zenodo.7970649.
-
-[WOODCOCK_2026] WOODCOCK, J.; RUINER, C. Work, employment, and resistance in transportation platforms. *New Technology, Work and Employment*, v. 41, p. 27–32, 2026.
-
----
-
-*Versão 1.1 — 04/10/2026. Resultados reais de `dvc repro` incorporados: eval.json + mean_abs_shap.json + classifier_metrics.json. Fonte de voos: ANAC VRA 2025 (27.959 chegadas SBPA).*
+_**Chaves NOVAS a confirmar (não presentes no corpus v0.3 — tratar como [REF?]):**_
+- _[OSM] — OpenStreetMap / Geofabrik (extrato Sul do Brasil). Confirmar forma de citação._
+- _[ANAC_VRA] — ANAC, Voos Regulares Ativos (VRA), 2025. Confirmar referência oficial._
+- _[UTCI_BRODE] — Índice UTCI (Universal Thermal Climate Index); provável Bröde et al. (2012).
+  Confirmar autoria/ano antes de inserir._
+- _[CHAWLA_2002] — SMOTE: Chawla et al., "SMOTE: Synthetic Minority Over-sampling Technique",
+  JAIR, 2002. Confirmar antes de inserir._

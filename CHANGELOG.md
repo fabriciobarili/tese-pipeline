@@ -3,6 +3,15 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.20.1 — Artigo: pipeline de ponta a ponta com predição conversacional
+
+### Alterado
+- `docs/artigo/sbbd-2026-draft.md`: a esteira descrita no artigo agora fecha o laço completo —
+  da coleta/fabricação do dado à **predição conversacional** devolvida ao motorista. Inclui o
+  estágio conversacional na Figura 1, a nova Seção 3.8 (modelos pareados + prior prospectivo +
+  ficha SHAP + narração em linguagem natural, sem *train/serve skew*), uma 4ª contribuição na
+  Introdução, e redige as Seções 5.4 (o que o motorista aprende) e 6 (conclusão).
+
 ## v0.20.0 — Narrador conversacional de demanda (motorista × modelos)
 
 ### Adicionado
