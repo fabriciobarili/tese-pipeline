@@ -3,6 +3,25 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.21.0 — Validação causal via SHAP (recuperação do gerador)
+
+### Adicionado
+- **`modeling/validacao_causal.py`**: verifica se o classificador de eventos *recupera* a
+  estrutura que o gerador sintético injetou. Quatro peças: ranking de importância SHAP por
+  classe; *dependence plot* do driver espacial (`dist_to_airport_km`); **teste de intervenção**
+  (relocar radialmente a origem para longe do SBPA, recomputando lat/lng/distância, e medir a
+  queda de P(evento)); e um *score de concordância* contra expectativas pré-registradas. Saídas
+  em `reports/causal_validation/` (JSONs + figuras).
+- Resultado da amostra de validação: `dist_to_airport_km` é o SHAP de topo nas duas classes de
+  evento; a intervenção derruba P(evento) com Spearman de −0,99 (voo) e −0,90 (clima) — o modelo
+  recuperou o ancoramento espacial, não um atalho.
+
+### Alterado
+- `docs/artigo/sbbd-2026-draft.md`: **Seção 5.3** redigida com esses resultados + Figuras 2 e 3.
+
+### Dependências
+- `scipy` declarado explicitamente (antes, transitivo via scikit-learn/shap).
+
 ## v0.20.1 — Artigo: pipeline de ponta a ponta com predição conversacional
 
 ### Alterado

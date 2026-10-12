@@ -481,7 +481,44 @@ matriz de confusão e importâncias SHAP — estão pendentes de consolidação 
 
 ### 5.3 Validação Causal via SHAP
 
-_(a redigir — recuperação dos efeitos de voo atrasado e estresse térmico.)_
+O que se valida aqui não é causalidade no mundo, mas **recuperação**: o gerador ancorou os
+eventos no SBPA e os distribuiu segundo padrões temporais conhecidos, e a pergunta é se o modelo
+reencontrou essa estrutura — ou se apenas acertou por um atalho. A expectativa foi *pré-registrada*
+antes de qualquer leitura do SHAP: para as duas classes de evento, o driver espacial
+`dist_to_airport_km` deveria dominar, com hora, mês e dia da semana logo atrás.
+
+O ranking de importância SHAP confirma a leitura. Em `voo_atrasado`, `dist_to_airport_km` é o
+atributo de maior |SHAP| — primeiro colocado —, seguido de `month`, `h3_distance_to_call`, `hour` e
+`weekday`; quatro dos cinco atributos no topo são os pré-registrados. Em `estresse_termico`, o
+mesmo driver espacial lidera, acompanhado de `month` e da hora — coerente com a sazonalidade do
+calor. A dependência (Figura 2) explicita o formato: o efeito de `dist_to_airport_km` sobre a
+probabilidade do evento é alto nas células próximas ao aeroporto e desaba à medida que a origem se
+afasta — a assinatura do ancoramento injetado.
+
+O teste decisivo é a **intervenção**. Como o gerador é controlado, reposicionamos radialmente a
+origem de corridas sob evento — afastando-a do SBPA ao longo do próprio azimute, recomputando
+latitude, longitude e distância de forma consistente — e medimos como a probabilidade predita
+responde. A queda é quase monotônica: a correlação de Spearman entre distância e P(evento) é de
+**−0,99** para `voo_atrasado` e **−0,90** para `estresse_termico` (Figura 3). Afastar a origem do
+aeroporto desliga a previsão de evento. O modelo não decorou um atalho arbitrário; respondeu à
+causa espacial que a simulação injetou.
+
+Duas qualificações mantêm o resultado honesto. A dimensão de voo é, por construção, a mais fácil —
+o ancoramento é quase determinístico e o SHAP se concentra nele, daí a Spearman junto de −1. A de
+estresse térmico é mais difusa (−0,90), e é nela que a recuperação diz mais, porque o sinal não é
+trivial. Tudo isso vale sobre uma amostra de validação (40 *shards*, ~1,42 milhão de corridas,
+rebalanceada a 60 mil por classe no treino); os números do *run* completo de 267 milhões refinam o
+que já se vê, sem alterar a conclusão. Não é generalização ao mundo real — é a prova de que o
+modelo aprendeu o que a proposta precisava que ele aprendesse. [ILL]
+
+![Figura 2](../../reports/causal_validation/dependence_dist_voo_atrasado.png)
+*Figura 2: Dependence plot — contribuição SHAP de `dist_to_airport_km` para P(voo_atrasado). O
+efeito é alto junto ao aeroporto e decai com a distância; o gráfico de `estresse_termico` tem a
+mesma assinatura (`reports/causal_validation/`).*
+
+![Figura 3](../../reports/causal_validation/intervencao_distancia.png)
+*Figura 3: Intervenção espacial. Afastar radialmente a origem do SBPA derruba a probabilidade
+predita do evento — Spearman de −0,99 (voo) e −0,90 (clima) entre distância e P(evento).*
 
 ### 5.4 O que o Motorista Aprende
 

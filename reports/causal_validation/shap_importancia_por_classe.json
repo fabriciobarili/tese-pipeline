@@ -1,0 +1,176 @@
+{
+  "estresse_termico": [
+    {
+      "feature": "dist_to_airport_km",
+      "shap_abs": 2.7019
+    },
+    {
+      "feature": "month",
+      "shap_abs": 0.96697
+    },
+    {
+      "feature": "origin_lat",
+      "shap_abs": 0.53317
+    },
+    {
+      "feature": "h3_distance_to_call",
+      "shap_abs": 0.34792
+    },
+    {
+      "feature": "hour",
+      "shap_abs": 0.34469
+    },
+    {
+      "feature": "weekday",
+      "shap_abs": 0.33027
+    },
+    {
+      "feature": "origin_lng",
+      "shap_abs": 0.24963
+    },
+    {
+      "feature": "pickup_time_min",
+      "shap_abs": 0.15882
+    },
+    {
+      "feature": "driver_rating",
+      "shap_abs": 0.06553
+    },
+    {
+      "feature": "driver_prior_trips",
+      "shap_abs": 0.06018
+    },
+    {
+      "feature": "trip_time_min",
+      "shap_abs": 0.03884
+    },
+    {
+      "feature": "trip_distance_km",
+      "shap_abs": 0.0298
+    },
+    {
+      "feature": "trip_seq",
+      "shap_abs": 0.02788
+    },
+    {
+      "feature": "driver_rating_class_enc",
+      "shap_abs": 0.0162
+    }
+  ],
+  "nenhum": [
+    {
+      "feature": "dist_to_airport_km",
+      "shap_abs": 4.91476
+    },
+    {
+      "feature": "h3_distance_to_call",
+      "shap_abs": 4.6147
+    },
+    {
+      "feature": "origin_lng",
+      "shap_abs": 1.93522
+    },
+    {
+      "feature": "origin_lat",
+      "shap_abs": 1.42964
+    },
+    {
+      "feature": "pickup_time_min",
+      "shap_abs": 0.91958
+    },
+    {
+      "feature": "driver_rating_class_enc",
+      "shap_abs": 0.46962
+    },
+    {
+      "feature": "driver_rating",
+      "shap_abs": 0.0609
+    },
+    {
+      "feature": "trip_time_min",
+      "shap_abs": 0.01515
+    },
+    {
+      "feature": "trip_distance_km",
+      "shap_abs": 0.01338
+    },
+    {
+      "feature": "trip_seq",
+      "shap_abs": 0.00981
+    },
+    {
+      "feature": "weekday",
+      "shap_abs": 0.00974
+    },
+    {
+      "feature": "driver_prior_trips",
+      "shap_abs": 0.00687
+    },
+    {
+      "feature": "month",
+      "shap_abs": 0.00399
+    },
+    {
+      "feature": "hour",
+      "shap_abs": 0.0038
+    }
+  ],
+  "voo_atrasado": [
+    {
+      "feature": "dist_to_airport_km",
+      "shap_abs": 2.82221
+    },
+    {
+      "feature": "month",
+      "shap_abs": 1.36085
+    },
+    {
+      "feature": "h3_distance_to_call",
+      "shap_abs": 1.05437
+    },
+    {
+      "feature": "hour",
+      "shap_abs": 0.48922
+    },
+    {
+      "feature": "weekday",
+      "shap_abs": 0.4377
+    },
+    {
+      "feature": "pickup_time_min",
+      "shap_abs": 0.31068
+    },
+    {
+      "feature": "origin_lat",
+      "shap_abs": 0.2479
+    },
+    {
+      "feature": "origin_lng",
+      "shap_abs": 0.07179
+    },
+    {
+      "feature": "driver_prior_trips",
+      "shap_abs": 0.04594
+    },
+    {
+      "feature": "driver_rating",
+      "shap_abs": 0.04284
+    },
+    {
+      "feature": "trip_distance_km",
+      "shap_abs": 0.03569
+    },
+    {
+      "feature": "trip_time_min",
+      "shap_abs": 0.03383
+    },
+    {
+      "feature": "trip_seq",
+      "shap_abs": 0.02484
+    },
+    {
+      "feature": "driver_rating_class_enc",
+      "shap_abs": 0.00799
+    }
+  ]
+}
