@@ -21,16 +21,24 @@ import duckdb
 import joblib
 import numpy as np
 import pandas as pd
+import shap
 from lightgbm import LGBMClassifier, early_stopping, log_evaluation
-from sklearn.metrics import average_precision_score, classification_report, f1_score
+from sklearn.metrics import (
+    average_precision_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+)
 
 from tese_pipeline.config import load_config, set_global_seed
 from tese_pipeline.logging_conf import configure_logging
+from tese_pipeline.modeling import figuras
 from tese_pipeline.narrador import features as fe
 
 LOG = logging.getLogger(__name__)
 
 ART_DIR = Path("Work/narrador_artefatos")
+FIG_DIR = Path("reports/narrador")      # figuras versionáveis (fora de Work/, que é ignorado)
 METEO_PARQUET = "data/raw/meteo.parquet"
 FLIGHTS_PARQUET = "data/raw/flights_anac.parquet"
 
@@ -205,6 +213,38 @@ def _exportar(r: dict, fallback: dict, model_path: Path, meta_path: Path,
     return meta
 
 
+def _figuras_par(model, Xte, yte, pos_label: str, feats: list[str], out_dir: Path) -> None:
+    """Exporta o conjunto de figuras de diagnóstico para um modelo pareado binário."""
+    classes = ["NAO_EVENTO", pos_label]
+    proba = model.predict_proba(Xte)                      # colunas [0, 1] = [NAO_EVENTO, pos]
+    pred = (proba[:, 1] >= 0.5).astype(int)
+    cm = confusion_matrix(yte, pred, labels=[0, 1])
+    rep = classification_report(yte, pred, labels=[0, 1], target_names=classes,
+                                output_dict=True, zero_division=0)
+    dist = (pd.Series(yte).map({0: "NAO_EVENTO", 1: pos_label})
+            .value_counts(normalize=True).mul(100).round(2).to_dict())
+    metrics = {
+        "confusion_matrix": {"matrix": cm.tolist()},
+        "per_class": {c: {k: round(rep[c][k], 4)
+                          for k in ("precision", "recall", "f1-score", "support")}
+                      for c in classes},
+        "target_distribution_pct": dist,
+    }
+    Xs = Xte.sample(min(3000, len(Xte)), random_state=42)
+    sv = shap.TreeExplainer(model).shap_values(Xs)
+    if isinstance(sv, list):
+        pos = sv[1]
+    elif getattr(sv, "ndim", 2) == 3:
+        pos = sv[:, :, 1]
+    else:
+        pos = sv
+    imp = np.abs(pos).mean(axis=0).ravel()
+    ranking = {feats[int(i)]: float(round(imp[int(i)], 5)) for i in np.argsort(-imp)}
+    shap_imp = {"global": ranking, "per_class": {pos_label: ranking}}
+    y_true_str = pd.Series(yte).map({0: "NAO_EVENTO", 1: pos_label}).to_numpy()
+    figuras.exportar_classificacao(y_true_str, proba, classes, metrics, shap_imp, out_dir)
+
+
 def main() -> None:
     configure_logging(log_file="reports/logs/narrador_treino.log")
     params = load_config("params.yaml")
@@ -247,6 +287,8 @@ def main() -> None:
         if fora:
             LOG.warning("[%s] features fora do namespace do narrador: %s", nome, fora)
         _exportar(r, fallback, mpath, meta_path, spw)
+        _figuras_par(r["model"], d["Xte"], d["yte"], pos_label, r["feats"],
+                     FIG_DIR / f"figuras_{nome}")
 
     LOG.info("artefatos do narrador em %s", ART_DIR)
 

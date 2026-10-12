@@ -479,6 +479,22 @@ confirmação de coerência interna, não uma promessa de generalização ao mun
 reexaminado no *run* completo de 267 milhões de corridas, cujos resultados — métricas por classe,
 matriz de confusão e importâncias SHAP — estão pendentes de consolidação na nuvem [PENDENTE].
 
+As Figuras 2 e 3 materializam esse quadro sobre a amostra de desenvolvimento: a matriz de confusão
+entre as três classes e o peso de cada variável. O domínio de `dist_to_airport_km` no ranking de
+importância antecipa a leitura causal da próxima seção; os números do *run* completo refinam as
+magnitudes sem mudar o padrão. O conjunto completo de diagnósticos — desempenho por classe,
+distribuição e curvas ROC/PR — é exportado a cada treino em `reports/event_analysis/figuras/`.
+
+![Figura 2](../../reports/event_analysis/figuras/matriz_confusao.png)
+*Figura 2: Matriz de confusão do classificador de eventos (normalizada por linha, com contagens;
+amostra de desenvolvimento). A diagonal concentra o acerto; a confusão residual recai sobre a
+minoria `voo_atrasado`.* [ILL]
+
+![Figura 3](../../reports/event_analysis/figuras/pesos_variaveis_global.png)
+*Figura 3: Peso de cada variável (|SHAP| médio global). `dist_to_airport_km` domina, seguido de
+`h3_distance_to_call` e dos atributos temporais — o ancoramento espacial que a Seção 5.3 valida.*
+[ILL]
+
 ### 5.3 Validação Causal via SHAP
 
 O que se valida aqui não é causalidade no mundo, mas **recuperação**: o gerador ancorou os
@@ -491,7 +507,7 @@ O ranking de importância SHAP confirma a leitura. Em `voo_atrasado`, `dist_to_a
 atributo de maior |SHAP| — primeiro colocado —, seguido de `month`, `h3_distance_to_call`, `hour` e
 `weekday`; quatro dos cinco atributos no topo são os pré-registrados. Em `estresse_termico`, o
 mesmo driver espacial lidera, acompanhado de `month` e da hora — coerente com a sazonalidade do
-calor. A dependência (Figura 2) explicita o formato: o efeito de `dist_to_airport_km` sobre a
+calor. A dependência (Figura 4) explicita o formato: o efeito de `dist_to_airport_km` sobre a
 probabilidade do evento é alto nas células próximas ao aeroporto e desaba à medida que a origem se
 afasta — a assinatura do ancoramento injetado.
 
@@ -499,7 +515,7 @@ O teste decisivo é a **intervenção**. Como o gerador é controlado, reposicio
 origem de corridas sob evento — afastando-a do SBPA ao longo do próprio azimute, recomputando
 latitude, longitude e distância de forma consistente — e medimos como a probabilidade predita
 responde. A queda é quase monotônica: a correlação de Spearman entre distância e P(evento) é de
-**−0,99** para `voo_atrasado` e **−0,90** para `estresse_termico` (Figura 3). Afastar a origem do
+**−0,99** para `voo_atrasado` e **−0,90** para `estresse_termico` (Figura 5). Afastar a origem do
 aeroporto desliga a previsão de evento. O modelo não decorou um atalho arbitrário; respondeu à
 causa espacial que a simulação injetou.
 
@@ -511,13 +527,13 @@ rebalanceada a 60 mil por classe no treino); os números do *run* completo de 26
 que já se vê, sem alterar a conclusão. Não é generalização ao mundo real — é a prova de que o
 modelo aprendeu o que a proposta precisava que ele aprendesse. [ILL]
 
-![Figura 2](../../reports/causal_validation/dependence_dist_voo_atrasado.png)
-*Figura 2: Dependence plot — contribuição SHAP de `dist_to_airport_km` para P(voo_atrasado). O
+![Figura 4](../../reports/causal_validation/dependence_dist_voo_atrasado.png)
+*Figura 4: Dependence plot — contribuição SHAP de `dist_to_airport_km` para P(voo_atrasado). O
 efeito é alto junto ao aeroporto e decai com a distância; o gráfico de `estresse_termico` tem a
 mesma assinatura (`reports/causal_validation/`).*
 
-![Figura 3](../../reports/causal_validation/intervencao_distancia.png)
-*Figura 3: Intervenção espacial. Afastar radialmente a origem do SBPA derruba a probabilidade
+![Figura 5](../../reports/causal_validation/intervencao_distancia.png)
+*Figura 5: Intervenção espacial. Afastar radialmente a origem do SBPA derruba a probabilidade
 predita do evento — Spearman de −0,99 (voo) e −0,90 (clima) entre distância e P(evento).*
 
 ### 5.4 O que o Motorista Aprende

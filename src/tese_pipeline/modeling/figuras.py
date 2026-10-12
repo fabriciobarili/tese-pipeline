@@ -143,26 +143,33 @@ def distribuicao_classes(dist_pct: dict, out_png: Path) -> None:
 
 
 def curvas_roc_pr(y_true, proba, classes, out_png: Path) -> None:
-    """ROC e Precision-Recall One-vs-Rest, uma curva por classe."""
-    yb = label_binarize(y_true, classes=list(classes))
-    if yb.shape[1] == 1:  # binário degenerado
-        return
+    """ROC e Precision-Recall. Binário: uma curva (classe positiva). Multiclasse: One-vs-Rest."""
+    classes = list(classes)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.4))
-    for k, c in enumerate(classes):
-        cor = _cor_classe(k)
-        fpr, tpr, _ = roc_curve(yb[:, k], proba[:, k])
-        ax1.plot(fpr, tpr, color=cor, lw=2, label=f"{c} (AUC {auc(fpr, tpr):.3f})")
-        prec, rec, _ = precision_recall_curve(yb[:, k], proba[:, k])
-        ax2.plot(rec, prec, color=cor, lw=2,
-                 label=f"{c} (AP {auc(rec, prec):.3f})")
+    if len(classes) == 2:
+        pos = classes[1]
+        yv = (np.asarray(y_true) == pos).astype(int)
+        pp = proba[:, 1]
+        fpr, tpr, _ = roc_curve(yv, pp)
+        ax1.plot(fpr, tpr, color=OKABE_ITO[0], lw=2, label=f"{pos} (AUC {auc(fpr, tpr):.3f})")
+        prec, rec, _ = precision_recall_curve(yv, pp)
+        ax2.plot(rec, prec, color=OKABE_ITO[0], lw=2, label=f"{pos} (AP {auc(rec, prec):.3f})")
+    else:
+        yb = label_binarize(y_true, classes=classes)
+        for k, c in enumerate(classes):
+            cor = _cor_classe(k)
+            fpr, tpr, _ = roc_curve(yb[:, k], proba[:, k])
+            ax1.plot(fpr, tpr, color=cor, lw=2, label=f"{c} (AUC {auc(fpr, tpr):.3f})")
+            prec, rec, _ = precision_recall_curve(yb[:, k], proba[:, k])
+            ax2.plot(rec, prec, color=cor, lw=2, label=f"{c} (AP {auc(rec, prec):.3f})")
     ax1.plot([0, 1], [0, 1], ls="--", color=GRID, lw=1)
     ax1.set_xlabel("falso-positivo", color=INK)
     ax1.set_ylabel("verdadeiro-positivo", color=INK)
-    ax1.set_title("ROC (OvR)", color=INK)
+    ax1.set_title("ROC", color=INK)
     ax1.legend(frameon=False, fontsize=8, loc="lower right")
     ax2.set_xlabel("recall", color=INK)
     ax2.set_ylabel("precisão", color=INK)
-    ax2.set_title("Precision–Recall (OvR)", color=INK)
+    ax2.set_title("Precision–Recall", color=INK)
     ax2.legend(frameon=False, fontsize=8, loc="lower left")
     for ax in (ax1, ax2):
         _limpa(ax)

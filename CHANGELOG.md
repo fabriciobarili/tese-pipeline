@@ -3,6 +3,20 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.23.0 — Figuras dos modelos pareados + figuras no artigo
+
+### Adicionado
+- `figuras.curvas_roc_pr` cobre o caso **binário** (curva única da classe positiva), além do
+  One-vs-Rest multiclasse.
+- **`narrador/treina_pareados`** exporta o conjunto de diagnósticos para CADA modelo pareado
+  (clima/atraso) — matriz de confusão, peso das variáveis, desempenho, distribuição e ROC/PR —
+  em `reports/narrador/figuras_clima/` e `figuras_atraso/`.
+
+### Alterado
+- `docs/artigo/sbbd-2026-draft.md`: a Seção 5.2 passa a **embutir** a matriz de confusão
+  (Figura 2) e o peso das variáveis (Figura 3) do classificador de eventos; as figuras da
+  validação causal foram renumeradas para 4 e 5.
+
 ## v0.22.0 — Figuras de diagnóstico do treinamento
 
 ### Adicionado
