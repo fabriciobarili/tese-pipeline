@@ -3,6 +3,13 @@
 Histórico legível das evoluções da pipeline da tese. Versões seguem o padrão
 `v0.MINOR.0` usado nas mensagens de commit.
 
+## v0.23.2 — docs/ fora do Git
+
+### Alterado
+- `docs/` passa a ser ignorada pelo Git (rascunhos do artigo, data/model cards, ADRs ficam
+  apenas locais). Os arquivos foram removidos do rastreio com `git rm --cached` (preservados em
+  disco).
+
 ## v0.23.1 — Resumo e Abstract do artigo
 
 ### Alterado
